@@ -18,11 +18,13 @@ import (
 	"github.com/crowdsecurity/crowdsec/pkg/apiclient"
 	"github.com/crowdsecurity/crowdsec/pkg/csconfig"
 	"github.com/crowdsecurity/crowdsec/pkg/cwhub"
+	"github.com/crowdsecurity/crowdsec/pkg/database"
 	"github.com/crowdsecurity/crowdsec/pkg/exprhelpers"
 	"github.com/crowdsecurity/crowdsec/pkg/leakybucket"
 	"github.com/crowdsecurity/crowdsec/pkg/metrics"
 	"github.com/crowdsecurity/crowdsec/pkg/parser"
 	"github.com/crowdsecurity/crowdsec/pkg/pipeline"
+	"github.com/crowdsecurity/crowdsec/pkg/pusher"
 	"github.com/crowdsecurity/crowdsec/pkg/rawlogstore"
 )
 
@@ -170,6 +172,35 @@ func runCrowdsec(
 	rawStore, err := rawlogstore.Start(ctx, cConfig.Crowdsec.RawLog, log.WithField("service", "rawlogstore"))
 	if err != nil {
 		return fmt.Errorf("starting rawlogstore: %w", err)
+	}
+
+	// Initialize Pusher if configured
+	if cConfig.Crowdsec.Pusher != nil && cConfig.Crowdsec.Pusher.Enabled != nil && *cConfig.Crowdsec.Pusher.Enabled {
+		var rawlogReader *rawlogstore.Reader
+		if rawStore != nil && cConfig.Crowdsec.RawLog != nil && cConfig.Crowdsec.RawLog.DbPath != "" {
+			// Create a reader for the rawlogstore
+			rawlogReader, err = rawlogstore.NewReader(cConfig.Crowdsec.RawLog.DbPath, log.WithField("service", "rawlogstore-reader"))
+			if err != nil {
+				log.WithError(err).Warn("failed to create rawlogstore reader, access log sync will be disabled")
+			}
+		}
+
+		// Note: Database client for alerts/decisions sync requires deeper integration.
+		// For now, Pusher will only sync access_logs. To enable alerts/decisions sync,
+		// pass a database client here when available.
+		var dbClient *database.Client = nil
+
+		pusherInstance, err := pusher.NewPusher(cConfig.Crowdsec.Pusher, rawlogReader, dbClient, cConfig.API.Client)
+		if err != nil {
+			log.WithError(err).Error("failed to initialize pusher")
+		} else {
+			go func() {
+				if err := pusherInstance.Run(ctx); err != nil {
+					log.WithError(err).Error("pusher error")
+				}
+			}()
+			log.Info("Pusher started")
+		}
 	}
 
 	acqLines := make(chan pipeline.Event)

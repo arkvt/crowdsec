@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://scarecrow.project/schemas/alert.schema.json",
+  "title": "Alert",
+  "description": "DATA_TYPE_ALERTS 批次中单条记录的结构 (来自 CrowdSec models.Alert)",
+  "type": "object",
+  "required": ["id", "created_at", "scenario", "source_value", "source_scope"],
+  "properties": {
+    "id": {
+      "type": "integer",
+      "description": "告警 ID"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "创建时间"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "更新时间"
+    },
+    "scenario": {
+      "type": "string",
+      "description": "触发场景名称",
+      "examples": ["crowdsecurity/http-probing", "crowdsecurity/ssh-bf"]
+    },
+    "scenario_hash": {
+      "type": "string",
+      "description": "场景哈希"
+    },
+    "scenario_version": {
+      "type": "string",
+      "description": "场景版本"
+    },
+    "message": {
+      "type": "string",
+      "description": "告警消息"
+    },
+    "events_count": {
+      "type": "integer",
+      "description": "关联事件数量"
+    },
+    "start_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "告警开始时间"
+    },
+    "stop_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "告警结束时间"
+    },
+    "capacity": {
+      "type": "integer",
+      "description": "桶容量"
+    },
+    "leakspeed": {
+      "type": "string",
+      "description": "泄漏速度"
+    },
+    "simulated": {
+      "type": "boolean",
+      "description": "是否为模拟告警"
+    },
+    "source_value": {
+      "type": "string",
+      "description": "攻击源值 (IP/Range/...)"
+    },
+    "source_scope": {
+      "type": "string",
+      "description": "攻击源作用域",
+      "enum": ["ip", "range", "as", "country"]
+    },
+    "source_ip": {
+      "type": "string",
+      "format": "ipv4",
+      "description": "攻击源 IP (scope=ip 时)"
+    },
+    "source_range": {
+      "type": "string",
+      "description": "攻击源 CIDR (scope=range 时)"
+    },
+    "source_as_number": {
+      "type": "string",
+      "description": "AS 编号 (scope=as 时)"
+    },
+    "source_as_name": {
+      "type": "string",
+      "description": "AS 名称"
+    }
+  },
+  "additionalProperties": true
+}

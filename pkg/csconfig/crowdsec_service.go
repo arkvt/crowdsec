@@ -29,6 +29,7 @@ type CrowdsecServiceCfg struct {
 	BucketStateDumpDir        string           `yaml:"state_output_dir,omitempty"` // if we need to unserialize buckets on shutdown
 	BucketsGCEnabled          bool             `yaml:"-"`                          // we need to garbage collect buckets when in forensic mode
 	RawLog                    *RawLogCfg       `yaml:"rawlog_store,omitempty"`
+	Pusher                    *PusherCfg       `yaml:"pusher,omitempty"`
 
 	SimulationFilePath string              `yaml:"-"`
 	ContextToSend      map[string][]string `yaml:"-"`
@@ -139,6 +140,10 @@ func (c *Config) LoadCrowdsec() error {
 
 	if err = c.LoadRawLogStore(); err != nil {
 		return fmt.Errorf("load error (rawlog_store): %w", err)
+	}
+
+	if err = c.LoadPusher(); err != nil {
+		return fmt.Errorf("load error (pusher): %w", err)
 	}
 
 	if c.Crowdsec.ParserRoutinesCount <= 0 {

@@ -1,0 +1,65 @@
+# Test configuration for CrowdSec with Pusher
+common:
+  daemonize: false
+  log_media: stdout
+  log_level: debug
+  
+config_paths:
+  config_dir: ./test_config/
+  data_dir: ./test_data/
+  simulation_path: ./test_config/simulation.yaml
+  hub_dir: ./test_config/hub/
+  index_path: ./test_config/hub/.index.json
+  
+crowdsec_service:
+  acquisition_path: ./test_config/acquis.yaml
+  parser_routines: 1
+  
+  # gRPC Pusher 配置
+  pusher:
+    enabled: true
+    backend_addr: "localhost:50051"
+    probe_id: "test-probe-01"
+    probe_secret: "test-secret-key"
+    
+    tls:
+      enabled: false
+    
+    sync:
+      enabled: true
+      access_logs_interval: "10s"
+      alerts_interval: "10s"
+      decisions_interval: "10s"
+      heartbeat_interval: "5s"
+      batch_size: 100
+      max_batch_bytes: 524288  # 512KB
+    
+    reconnect_interval: "2s"
+    max_reconnect_interval: "30s"
+    state_file: "./test_data/pusher-state.json"
+
+db_config:
+  log_level: info
+  type: sqlite
+  db_path: ./test_data/crowdsec.db
+  flush:
+    max_items: 1000
+    max_age: 7d
+
+api:
+  client:
+    insecure_skip_verify: false
+    credentials_path: ./test_config/local_api_credentials.yaml
+  server:
+    log_level: debug
+    listen_uri: 127.0.0.1:8080
+    profiles_path: ./test_config/profiles.yaml
+    trusted_ips:
+      - 127.0.0.1
+      - ::1
+
+prometheus:
+  enabled: true
+  level: full
+  listen_addr: 127.0.0.1
+  listen_port: 6060

@@ -1,0 +1,44 @@
+# Pusher 配置示例 (gRPC)
+# 将此配置添加到 CrowdSec 的 config.yaml 中的 crowdsec_service 部分
+
+crowdsec_service:
+  # ... 其他配置 ...
+
+  # Pusher 模块 - gRPC 双向流同步
+  pusher:
+    enabled: true
+    
+    # gRPC 后端服务器地址 (host:port)
+    backend_addr: "backend.example.com:50051"
+    
+    # 探针身份认证
+    probe_id: "prod-gateway-01"
+    probe_secret: "sk_probe_xxxxx"
+    
+    # TLS 配置 (可选)
+    tls:
+      enabled: false
+      # mTLS 客户端证书 (可选)
+      cert_file: ""
+      key_file: ""
+      # 服务端 CA 证书
+      ca_file: ""
+      # 跳过服务端证书验证 (仅用于开发环境)
+      skip_verify: false
+    
+    # 数据同步配置
+    sync:
+      enabled: true
+      access_logs_interval: "60s"   # Access logs 同步间隔
+      alerts_interval: "30s"        # Alerts 同步间隔
+      decisions_interval: "30s"     # Decisions 同步间隔
+      heartbeat_interval: "30s"     # 心跳间隔
+      batch_size: 500               # 每批最大记录数
+      max_batch_bytes: 1048576      # 每批最大字节数 (1MB)
+    
+    # 重连配置
+    reconnect_interval: "5s"        # 初始重连间隔
+    max_reconnect_interval: "60s"   # 最大重连间隔
+    
+    # 游标状态文件路径
+    state_file: "./data/pusher-state.json"

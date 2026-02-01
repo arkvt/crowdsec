@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://scarecrow.project/schemas/access_log.schema.json",
+  "title": "AccessLog",
+  "description": "DATA_TYPE_ACCESS_LOGS 批次中单条记录的结构",
+  "type": "object",
+  "required": ["id", "acquis_type", "module", "labels", "src", "ts", "raw"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "唯一标识 (数据库 rowid)"
+    },
+    "acquis_type": {
+      "type": "string",
+      "description": "采集类型",
+      "examples": ["caddy", "nginx"]
+    },
+    "module": {
+      "type": "string",
+      "description": "模块名称"
+    },
+    "labels": {
+      "type": "object",
+      "description": "元数据标签 (key-value pairs)",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "src": {
+      "type": "string",
+      "description": "数据源标识"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 时间戳"
+    },
+    "raw": {
+      "type": "string",
+      "description": "原始日志内容 (通常是 JSON 字符串)"
+    }
+  },
+  "additionalProperties": false
+}

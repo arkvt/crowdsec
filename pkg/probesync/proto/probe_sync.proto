@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package probesync;
+
+option go_package = "github.com/crowdsecurity/crowdsec/pkg/probesync/pb";
+
+// ProbeSync 探针同步服务 - 双向流通信
+service ProbeSync {
+  // Connect 双向流：探针发起连接，保持长连接
+  rpc Connect(stream ProbeMessage) returns (stream BackendMessage);
+}
+
+// ========== 探针 → 后端 ==========
+
+// ProbeMessage 探针发送的消息
+message ProbeMessage {
+  string probe_id = 1;
+  oneof payload {
+    Heartbeat heartbeat = 10;
+    DataBatch data_batch = 11;
+    CommandAck command_ack = 12;
+  }
+}
+
+// Heartbeat 心跳消息
+message Heartbeat {
+  string timestamp = 1;
+  ProbeStatus status = 2;
+}
+
+// ProbeStatus 探针状态
+message ProbeStatus {
+  string version = 1;
+  int64 uptime_seconds = 2;
+  int64 pending_access_logs = 3;
+  int64 pending_alerts = 4;
+  int64 pending_decisions = 5;
+}
+
+// DataBatch 数据批次
+message DataBatch {
+  string batch_id = 1;           // 幂等键: {probe_id}-{type}-{from}-{to}
+  DataType type = 2;
+  bytes data = 3;                // JSON 编码的数据数组
+  int64 cursor_from = 4;
+  int64 cursor_to = 5;
+  string timestamp = 6;
+}
+
+// DataType 数据类型枚举
+enum DataType {
+  DATA_TYPE_UNSPECIFIED = 0;
+  DATA_TYPE_ACCESS_LOGS = 1;
+  DATA_TYPE_ALERTS = 2;
+  DATA_TYPE_DECISIONS = 3;
+}
+
+// CommandAck 指令执行确认
+message CommandAck {
+  string command_id = 1;
+  CommandStatus status = 2;
+  string result = 3;             // JSON 编码的结果
+  string error = 4;
+}
+
+// CommandStatus 指令执行状态
+enum CommandStatus {
+  COMMAND_STATUS_UNSPECIFIED = 0;
+  COMMAND_STATUS_SUCCESS = 1;
+  COMMAND_STATUS_FAILED = 2;
+}
+
+// ========== 后端 → 探针 ==========
+
+// BackendMessage 后端发送的消息
+message BackendMessage {
+  oneof payload {
+    HeartbeatAck heartbeat_ack = 10;
+    BatchAck batch_ack = 11;
+    Command command = 12;
+    ConfigUpdate config_update = 13;
+  }
+}
+
+// HeartbeatAck 心跳响应
+message HeartbeatAck {
+  string server_time = 1;
+  bool config_update_available = 2;
+}
+
+// BatchAck 批次确认
+message BatchAck {
+  string batch_id = 1;
+  AckStatus status = 2;
+  string error = 3;
+}
+
+// AckStatus 确认状态枚举
+enum AckStatus {
+  ACK_STATUS_UNSPECIFIED = 0;
+  ACK_STATUS_OK = 1;
+  ACK_STATUS_DUPLICATE = 2;      // 幂等：重复 batch_id
+  ACK_STATUS_ERROR = 3;
+}
+
+// Command 指令消息
+message Command {
+  string id = 1;
+  CommandType type = 2;
+  bytes params = 3;              // JSON 编码的参数
+  string created_at = 4;
+  string expires_at = 5;
+}
+
+// CommandType 指令类型枚举
+enum CommandType {
+  COMMAND_TYPE_UNSPECIFIED = 0;
+  COMMAND_TYPE_PING = 1;
+  COMMAND_TYPE_FORCE_SYNC = 2;
+  COMMAND_TYPE_ADD_WHITELIST = 3;
+  COMMAND_TYPE_REMOVE_WHITELIST = 4;
+  COMMAND_TYPE_ADD_DECISION = 5;
+  COMMAND_TYPE_REMOVE_DECISION = 6;
+  COMMAND_TYPE_UPDATE_CONFIG = 7;
+}
+
+// ConfigUpdate 配置更新
+message ConfigUpdate {
+  string version = 1;
+  bytes config = 2;              // YAML 配置
+}
