@@ -39,20 +39,125 @@ message ProbeStatus {
 
 // DataBatch 数据批次
 message DataBatch {
-  string batch_id = 1;           // 幂等键: {probe_id}-{type}-{from}-{to}
-  DataType type = 2;
-  bytes data = 3;                // JSON 编码的数据数组
+  string batch_id = 1;           // 幂等键: {probe_id}-{payload}-{from}-{to}
   int64 cursor_from = 4;
   int64 cursor_to = 5;
   string timestamp = 6;
+  oneof payload {
+    CaddyLogBatch caddy_logs = 10;
+    AlertBatch alerts = 11;
+    DecisionBatch decisions = 12;
+  }
 }
 
-// DataType 数据类型枚举
-enum DataType {
-  DATA_TYPE_UNSPECIFIED = 0;
-  DATA_TYPE_ACCESS_LOGS = 1;
-  DATA_TYPE_ALERTS = 2;
-  DATA_TYPE_DECISIONS = 3;
+// ========== 数据结构定义 ==========
+
+// CaddyLogBatch 访问日志批次
+message CaddyLogBatch {
+  repeated CaddyLog items = 1;
+}
+
+// CaddyLog Caddy 访问日志结构
+message CaddyLog {
+  string level = 1;
+  double ts = 2;
+  string logger = 3;
+  string msg = 4;
+  CaddyRequest request = 5;
+  int64 bytes_read = 6;
+  string user_id = 7;
+  double duration = 8;
+  int64 size = 9;
+  uint32 status = 10;
+  map<string, StringList> resp_headers = 11;
+}
+
+// CaddyRequest 请求详情
+message CaddyRequest {
+  string remote_ip = 1;
+  string remote_port = 2;
+  string client_ip = 3;
+  string proto = 4;
+  string method = 5;
+  string host = 6;
+  string uri = 7;
+  map<string, StringList> headers = 8;
+  CaddyTls tls = 9;
+}
+
+// CaddyTls TLS 信息
+message CaddyTls {
+  bool resumed = 1;
+  uint32 version = 2;
+  uint32 cipher_suite = 3;
+  string proto = 4;
+  string server_name = 5;
+}
+
+// StringList 字符串列表
+message StringList {
+  repeated string values = 1;
+}
+
+// AlertBatch 告警批次
+message AlertBatch {
+  repeated Alert items = 1;
+}
+
+// Alert 告警结构
+message Alert {
+  int64 id = 1;
+  string created_at = 2;
+  string updated_at = 3;
+  string scenario = 4;
+  string bucket_id = 5;
+  string message = 6;
+  int32 events_count = 7;
+  string started_at = 8;
+  string stopped_at = 9;
+  string source_ip = 10;
+  string source_range = 11;
+  string source_as_number = 12;
+  string source_as_name = 13;
+  string source_country = 14;
+  double source_latitude = 15;
+  double source_longitude = 16;
+  string source_scope = 17;
+  string source_value = 18;
+  int32 capacity = 19;
+  string leak_speed = 20;
+  string scenario_version = 21;
+  string scenario_hash = 22;
+  bool simulated = 23;
+  string uuid = 24;
+  bool remediation = 25;
+  int64 machine_alerts = 26;
+}
+
+// DecisionBatch 决策批次
+message DecisionBatch {
+  repeated Decision items = 1;
+}
+
+// Decision 决策结构
+message Decision {
+  int64 id = 1;
+  string created_at = 2;
+  string updated_at = 3;
+  string until = 4;
+  string scenario = 5;
+  string type = 6;
+  int64 start_ip = 7;
+  int64 end_ip = 8;
+  int64 start_suffix = 9;
+  int64 end_suffix = 10;
+  int64 ip_size = 11;
+  string scope = 12;
+  string value = 13;
+  string origin = 14;
+  bool simulated = 15;
+  string uuid = 16;
+  int64 alert_decisions = 17;
 }
 
 // CommandAck 指令执行确认

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.0
 // - protoc             v5.29.4
-// source: proto/probe_sync.proto
+// source: probe_sync.proto
 
 package pb
 
@@ -117,5 +117,5 @@ var ProbeSync_ServiceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: "proto/probe_sync.proto",
+	Metadata: "probe_sync.proto",
 }

@@ -2,9 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://scarecrow.project/schemas/alert.schema.json",
   "title": "Alert",
-  "description": "DATA_TYPE_ALERTS 批次中单条记录的结构 (来自 CrowdSec models.Alert)",
+  "description": "alerts 批次中单条记录的结构",
   "type": "object",
-  "required": ["id", "created_at", "scenario", "source_value", "source_scope"],
+  "required": ["id", "created_at", "updated_at", "scenario"],
   "properties": {
     "id": {
       "type": "integer",
@@ -12,18 +12,20 @@
     },
     "created_at": {
       "type": "string",
-      "format": "date-time",
       "description": "创建时间"
     },
     "updated_at": {
       "type": "string",
-      "format": "date-time",
       "description": "更新时间"
     },
     "scenario": {
       "type": "string",
       "description": "触发场景名称",
       "examples": ["crowdsecurity/http-probing", "crowdsecurity/ssh-bf"]
+    },
+    "bucket_id": {
+      "type": "string",
+      "description": "bucket_id"
     },
     "scenario_hash": {
       "type": "string",
@@ -41,21 +43,19 @@
       "type": "integer",
       "description": "关联事件数量"
     },
-    "start_at": {
+    "started_at": {
       "type": "string",
-      "format": "date-time",
       "description": "告警开始时间"
     },
-    "stop_at": {
+    "stopped_at": {
       "type": "string",
-      "format": "date-time",
       "description": "告警结束时间"
     },
     "capacity": {
       "type": "integer",
       "description": "桶容量"
     },
-    "leakspeed": {
+    "leak_speed": {
       "type": "string",
       "description": "泄漏速度"
     },
@@ -65,16 +65,14 @@
     },
     "source_value": {
       "type": "string",
-      "description": "攻击源值 (IP/Range/...)"
+      "description": "攻击源值"
     },
     "source_scope": {
       "type": "string",
-      "description": "攻击源作用域",
-      "enum": ["ip", "range", "as", "country"]
+      "description": "攻击源作用域"
     },
     "source_ip": {
       "type": "string",
-      "format": "ipv4",
       "description": "攻击源 IP (scope=ip 时)"
     },
     "source_range": {
@@ -88,7 +86,31 @@
     "source_as_name": {
       "type": "string",
       "description": "AS 名称"
+    },
+    "source_country": {
+      "type": "string",
+      "description": "国家"
+    },
+    "source_latitude": {
+      "type": "number",
+      "description": "纬度"
+    },
+    "source_longitude": {
+      "type": "number",
+      "description": "经度"
+    },
+    "uuid": {
+      "type": "string",
+      "description": "唯一标识"
+    },
+    "remediation": {
+      "type": "boolean",
+      "description": "是否需要 remediation"
+    },
+    "machine_alerts": {
+      "type": "integer",
+      "description": "关联机器 ID"
     }
   },
-  "additionalProperties": true
+  "additionalProperties": false
 }

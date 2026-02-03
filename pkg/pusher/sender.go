@@ -206,20 +206,21 @@ func (s *Sender) syncAccessLogs(ctx context.Context, stream pb.ProbeSync_Connect
 	fromID := result.Items[0].ID
 	toID := result.Items[len(result.Items)-1].ID
 
-	items, data, err := limitSliceByBytes(result.Items, s.maxBatchBytes())
+	items, usedCount, err := limitCaddyLogsByBytes(result.Items, s.maxBatchBytes())
 	if err != nil {
 		return fmt.Errorf("failed to build access logs batch: %w", err)
 	}
-	if len(items) == 0 {
+	if len(items) == 0 || usedCount == 0 {
 		return nil
 	}
 
 	// 若被裁剪，更新范围
-	fromID = items[0].ID
-	toID = items[len(items)-1].ID
+	if usedCount < len(result.Items) {
+		toID = result.Items[usedCount-1].ID
+	}
 
 	// 生成 batch ID
-	batchID := fmt.Sprintf("%s-access_logs-%d-%d", s.cfg.ProbeID, fromID, toID)
+	batchID := fmt.Sprintf("%s-caddy_logs-%d-%d", s.cfg.ProbeID, fromID, toID)
 
 	// 发送批次
 	msg := &pb.ProbeMessage{
@@ -227,11 +228,14 @@ func (s *Sender) syncAccessLogs(ctx context.Context, stream pb.ProbeSync_Connect
 		Payload: &pb.ProbeMessage_DataBatch{
 			DataBatch: &pb.DataBatch{
 				BatchId:    batchID,
-				Type:       pb.DataType_DATA_TYPE_ACCESS_LOGS,
-				Data:       data,
 				CursorFrom: fromID,
 				CursorTo:   toID,
 				Timestamp:  time.Now().UTC().Format(time.RFC3339),
+				Payload: &pb.DataBatch_CaddyLogs{
+					CaddyLogs: &pb.CaddyLogBatch{
+						Items: items,
+					},
+				},
 			},
 		},
 	}
@@ -278,7 +282,7 @@ func (s *Sender) syncAlerts(ctx context.Context, stream pb.ProbeSync_ConnectClie
 		return nil
 	}
 
-	items, data, err := limitSliceByBytes(alerts, s.maxBatchBytes())
+	items, err := limitAlertsByBytes(alerts, s.maxBatchBytes())
 	if err != nil {
 		return fmt.Errorf("failed to build alerts batch: %w", err)
 	}
@@ -286,8 +290,8 @@ func (s *Sender) syncAlerts(ctx context.Context, stream pb.ProbeSync_ConnectClie
 		return nil
 	}
 
-	fromID := int64(items[0].ID)
-	toID := int64(items[len(items)-1].ID)
+	fromID := items[0].Id
+	toID := items[len(items)-1].Id
 
 	// 生成 batch ID
 	batchID := fmt.Sprintf("%s-alerts-%d-%d", s.cfg.ProbeID, fromID, toID)
@@ -298,11 +302,14 @@ func (s *Sender) syncAlerts(ctx context.Context, stream pb.ProbeSync_ConnectClie
 		Payload: &pb.ProbeMessage_DataBatch{
 			DataBatch: &pb.DataBatch{
 				BatchId:    batchID,
-				Type:       pb.DataType_DATA_TYPE_ALERTS,
-				Data:       data,
 				CursorFrom: fromID,
 				CursorTo:   toID,
 				Timestamp:  time.Now().UTC().Format(time.RFC3339),
+				Payload: &pb.DataBatch_Alerts{
+					Alerts: &pb.AlertBatch{
+						Items: items,
+					},
+				},
 			},
 		},
 	}
@@ -347,7 +354,7 @@ func (s *Sender) syncDecisions(ctx context.Context, stream pb.ProbeSync_ConnectC
 		return nil
 	}
 
-	items, data, err := limitSliceByBytes(decisions, s.maxBatchBytes())
+	items, err := limitDecisionsByBytes(decisions, s.maxBatchBytes())
 	if err != nil {
 		return fmt.Errorf("failed to build decisions batch: %w", err)
 	}
@@ -355,8 +362,8 @@ func (s *Sender) syncDecisions(ctx context.Context, stream pb.ProbeSync_ConnectC
 		return nil
 	}
 
-	fromID := int64(items[0].ID)
-	toID := int64(items[len(items)-1].ID)
+	fromID := items[0].Id
+	toID := items[len(items)-1].Id
 
 	// 生成 batch ID
 	batchID := fmt.Sprintf("%s-decisions-%d-%d", s.cfg.ProbeID, fromID, toID)
@@ -367,11 +374,14 @@ func (s *Sender) syncDecisions(ctx context.Context, stream pb.ProbeSync_ConnectC
 		Payload: &pb.ProbeMessage_DataBatch{
 			DataBatch: &pb.DataBatch{
 				BatchId:    batchID,
-				Type:       pb.DataType_DATA_TYPE_DECISIONS,
-				Data:       data,
 				CursorFrom: fromID,
 				CursorTo:   toID,
 				Timestamp:  time.Now().UTC().Format(time.RFC3339),
+				Payload: &pb.DataBatch_Decisions{
+					Decisions: &pb.DecisionBatch{
+						Items: items,
+					},
+				},
 			},
 		},
 	}
@@ -548,33 +558,257 @@ func envDuration(key string, fallback time.Duration) time.Duration {
 	return parsed
 }
 
-func limitSliceByBytes[T any](items []T, maxBytes int) ([]T, []byte, error) {
+type stringOrNumber string
+
+func (s *stringOrNumber) UnmarshalJSON(data []byte) error {
+	var str string
+	if err := json.Unmarshal(data, &str); err == nil {
+		*s = stringOrNumber(str)
+		return nil
+	}
+
+	var num int64
+	if err := json.Unmarshal(data, &num); err == nil {
+		*s = stringOrNumber(strconv.FormatInt(num, 10))
+		return nil
+	}
+
+	return fmt.Errorf("invalid stringOrNumber: %s", string(data))
+}
+
+type caddyLogRaw struct {
+	Level       string              `json:"level"`
+	Ts          float64             `json:"ts"`
+	Logger      string              `json:"logger"`
+	Msg         string              `json:"msg"`
+	Request     *caddyRequestRaw    `json:"request"`
+	BytesRead   int64               `json:"bytes_read"`
+	UserID      string              `json:"user_id"`
+	Duration    float64             `json:"duration"`
+	Size        int64               `json:"size"`
+	Status      uint32              `json:"status"`
+	RespHeaders map[string][]string `json:"resp_headers"`
+}
+
+type caddyRequestRaw struct {
+	RemoteIP   string              `json:"remote_ip"`
+	RemotePort stringOrNumber      `json:"remote_port"`
+	ClientIP   string              `json:"client_ip"`
+	Proto      string              `json:"proto"`
+	Method     string              `json:"method"`
+	Host       string              `json:"host"`
+	URI        string              `json:"uri"`
+	Headers    map[string][]string `json:"headers"`
+	TLS        *caddyTLSRaw        `json:"tls"`
+}
+
+type caddyTLSRaw struct {
+	Resumed     bool   `json:"resumed"`
+	Version     uint32 `json:"version"`
+	CipherSuite uint32 `json:"cipher_suite"`
+	Proto       string `json:"proto"`
+	ServerName  string `json:"server_name"`
+}
+
+func toStringListMap(input map[string][]string) map[string]*pb.StringList {
+	if len(input) == 0 {
+		return nil
+	}
+
+	output := make(map[string]*pb.StringList, len(input))
+	for key, values := range input {
+		output[key] = &pb.StringList{Values: values}
+	}
+	return output
+}
+
+func limitCaddyLogsByBytes(items []rawlogstore.AccessLog, maxBytes int) ([]*pb.CaddyLog, int, error) {
 	if len(items) == 0 {
-		return items, nil, nil
+		return nil, 0, nil
+	}
+
+	logs := make([]*pb.CaddyLog, 0, len(items))
+	for _, item := range items {
+		var rawLog caddyLogRaw
+		if err := json.Unmarshal([]byte(item.Raw), &rawLog); err != nil {
+			return nil, 0, fmt.Errorf("parse caddy log id=%d: %w", item.ID, err)
+		}
+
+		var request *pb.CaddyRequest
+		if rawLog.Request != nil {
+			request = &pb.CaddyRequest{
+				RemoteIp:   rawLog.Request.RemoteIP,
+				RemotePort: string(rawLog.Request.RemotePort),
+				ClientIp:   rawLog.Request.ClientIP,
+				Proto:      rawLog.Request.Proto,
+				Method:     rawLog.Request.Method,
+				Host:       rawLog.Request.Host,
+				Uri:        rawLog.Request.URI,
+				Headers:    toStringListMap(rawLog.Request.Headers),
+			}
+			if rawLog.Request.TLS != nil {
+				request.Tls = &pb.CaddyTls{
+					Resumed:     rawLog.Request.TLS.Resumed,
+					Version:     rawLog.Request.TLS.Version,
+					CipherSuite: rawLog.Request.TLS.CipherSuite,
+					Proto:       rawLog.Request.TLS.Proto,
+					ServerName:  rawLog.Request.TLS.ServerName,
+				}
+			}
+		}
+
+		logEntry := &pb.CaddyLog{
+			Level:       rawLog.Level,
+			Ts:          rawLog.Ts,
+			Logger:      rawLog.Logger,
+			Msg:         rawLog.Msg,
+			Request:     request,
+			BytesRead:   rawLog.BytesRead,
+			UserId:      rawLog.UserID,
+			Duration:    rawLog.Duration,
+			Size:        rawLog.Size,
+			Status:      rawLog.Status,
+			RespHeaders: toStringListMap(rawLog.RespHeaders),
+		}
+		logs = append(logs, logEntry)
 	}
 
 	if maxBytes <= 0 {
-		data, err := json.Marshal(items)
-		return items, data, err
+		return logs, len(logs), nil
 	}
 
-	data, err := json.Marshal(items)
+	data, err := json.Marshal(logs)
 	if err != nil {
-		return nil, nil, err
+		return nil, 0, err
 	}
 	if len(data) <= maxBytes {
-		return items, data, nil
+		return logs, len(logs), nil
 	}
 
-	for i := len(items) - 1; i >= 1; i-- {
-		data, err = json.Marshal(items[:i])
+	for i := len(logs) - 1; i >= 1; i-- {
+		data, err = json.Marshal(logs[:i])
 		if err != nil {
-			return nil, nil, err
+			return nil, 0, err
 		}
 		if len(data) <= maxBytes {
-			return items[:i], data, nil
+			return logs[:i], i, nil
 		}
 	}
 
-	return nil, nil, fmt.Errorf("batch too large even with 1 item")
+	return nil, 0, fmt.Errorf("batch too large even with 1 item")
+}
+
+func limitAlertsByBytes(items []*database.PusherAlert, maxBytes int) ([]*pb.Alert, error) {
+	if len(items) == 0 {
+		return nil, nil
+	}
+
+	alerts := make([]*pb.Alert, 0, len(items))
+	for _, item := range items {
+		alerts = append(alerts, &pb.Alert{
+			Id:              int64(item.ID),
+			CreatedAt:       item.CreatedAt,
+			UpdatedAt:       item.UpdatedAt,
+			Scenario:        item.Scenario,
+			BucketId:        item.BucketID,
+			Message:         item.Message,
+			EventsCount:     int32(item.EventsCount),
+			StartedAt:       item.StartedAt,
+			StoppedAt:       item.StoppedAt,
+			SourceIp:        item.SourceIP,
+			SourceRange:     item.SourceRange,
+			SourceAsNumber:  item.SourceASNumber,
+			SourceAsName:    item.SourceASName,
+			SourceCountry:   item.SourceCountry,
+			SourceLatitude:  float64(item.SourceLatitude),
+			SourceLongitude: float64(item.SourceLongitude),
+			SourceScope:     item.SourceScope,
+			SourceValue:     item.SourceValue,
+			Capacity:        int32(item.Capacity),
+			LeakSpeed:       item.LeakSpeed,
+			ScenarioVersion: item.ScenarioVersion,
+			ScenarioHash:    item.ScenarioHash,
+			Simulated:       item.Simulated,
+			Uuid:            item.UUID,
+			Remediation:     item.Remediation,
+			MachineAlerts:   int64(item.MachineAlerts),
+		})
+	}
+
+	if maxBytes <= 0 {
+		return alerts, nil
+	}
+
+	data, err := json.Marshal(alerts)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) <= maxBytes {
+		return alerts, nil
+	}
+
+	for i := len(alerts) - 1; i >= 1; i-- {
+		data, err = json.Marshal(alerts[:i])
+		if err != nil {
+			return nil, err
+		}
+		if len(data) <= maxBytes {
+			return alerts[:i], nil
+		}
+	}
+
+	return nil, fmt.Errorf("batch too large even with 1 item")
+}
+
+func limitDecisionsByBytes(items []*database.PusherDecision, maxBytes int) ([]*pb.Decision, error) {
+	if len(items) == 0 {
+		return nil, nil
+	}
+
+	decisions := make([]*pb.Decision, 0, len(items))
+	for _, item := range items {
+		decisions = append(decisions, &pb.Decision{
+			Id:             int64(item.ID),
+			CreatedAt:      item.CreatedAt,
+			UpdatedAt:      item.UpdatedAt,
+			Until:          item.Until,
+			Scenario:       item.Scenario,
+			Type:           item.Type,
+			StartIp:        item.StartIP,
+			EndIp:          item.EndIP,
+			StartSuffix:    item.StartSuffix,
+			EndSuffix:      item.EndSuffix,
+			IpSize:         item.IPSize,
+			Scope:          item.Scope,
+			Value:          item.Value,
+			Origin:         item.Origin,
+			Simulated:      item.Simulated,
+			Uuid:           item.UUID,
+			AlertDecisions: int64(item.AlertDecisions),
+		})
+	}
+
+	if maxBytes <= 0 {
+		return decisions, nil
+	}
+
+	data, err := json.Marshal(decisions)
+	if err != nil {
+		return nil, err
+	}
+	if len(data) <= maxBytes {
+		return decisions, nil
+	}
+
+	for i := len(decisions) - 1; i >= 1; i-- {
+		data, err = json.Marshal(decisions[:i])
+		if err != nil {
+			return nil, err
+		}
+		if len(data) <= maxBytes {
+			return decisions[:i], nil
+		}
+	}
+
+	return nil, fmt.Errorf("batch too large even with 1 item")
 }

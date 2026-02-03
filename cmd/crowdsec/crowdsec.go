@@ -185,10 +185,14 @@ func runCrowdsec(
 			}
 		}
 
-		// Note: Database client for alerts/decisions sync requires deeper integration.
-		// For now, Pusher will only sync access_logs. To enable alerts/decisions sync,
-		// pass a database client here when available.
-		var dbClient *database.Client = nil
+		var dbClient *database.Client
+		if cConfig.DbConfig != nil {
+			dbCfg := cConfig.DbConfig
+			dbClient, err = database.NewClient(ctx, dbCfg, dbCfg.NewLogger())
+			if err != nil {
+				return fmt.Errorf("unable to create database client for pusher: %w", err)
+			}
+		}
 
 		pusherInstance, err := pusher.NewPusher(cConfig.Crowdsec.Pusher, rawlogReader, dbClient, cConfig.API.Client)
 		if err != nil {

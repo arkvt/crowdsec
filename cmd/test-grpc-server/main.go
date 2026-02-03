@@ -12,6 +12,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	pb "github.com/crowdsecurity/crowdsec/pkg/probesync/pb"
 )
@@ -131,30 +132,29 @@ func (s *testServer) handleDataBatch(probeID string, batch *pb.DataBatch, stream
 	log.Printf("  Type: DataBatch")
 	log.Printf("  ProbeID: %s", probeID)
 	log.Printf("  BatchID: %s", batch.BatchId)
-	log.Printf("  DataType: %s (%d)", batch.Type.String(), batch.Type)
 	log.Printf("  CursorFrom: %d", batch.CursorFrom)
 	log.Printf("  CursorTo: %d", batch.CursorTo)
 	log.Printf("  Timestamp: %s", batch.Timestamp)
-	log.Printf("  DataSize: %d bytes", len(batch.Data))
 
-	// 解析 JSON 数据
-	if len(batch.Data) > 0 {
-		var data interface{}
-		if err := json.Unmarshal(batch.Data, &data); err == nil {
-			prettyJSON, _ := json.MarshalIndent(data, "    ", "  ")
-			log.Printf("  Data (JSON):\n    %s", string(prettyJSON))
+	payloadType := "unknown"
+	var payloadJSON []byte
+	switch payload := batch.Payload.(type) {
+	case *pb.DataBatch_CaddyLogs:
+		payloadType = "caddy_logs"
+		payloadJSON, _ = protojson.Marshal(payload.CaddyLogs)
+	case *pb.DataBatch_Alerts:
+		payloadType = "alerts"
+		payloadJSON, _ = protojson.Marshal(payload.Alerts)
+	case *pb.DataBatch_Decisions:
+		payloadType = "decisions"
+		payloadJSON, _ = protojson.Marshal(payload.Decisions)
+	default:
+		log.Printf("  Payload: <unknown>")
+	}
 
-			// 保存到文件
-			filename := fmt.Sprintf("data_%s_%s.json", batch.Type.String(), time.Now().Format("20060102_150405"))
-			if err := saveToFile(filename, prettyJSON); err != nil {
-				log.Printf("⚠️  Failed to save data to file: %v", err)
-			} else {
-				log.Printf("💾 Data saved to: %s", filename)
-			}
-		} else {
-			log.Printf("⚠️  Failed to parse JSON data: %v", err)
-			log.Printf("  Raw Data (first 500 bytes): %s", string(batch.Data[:min(500, len(batch.Data))]))
-		}
+	if len(payloadJSON) > 0 {
+		json.MarshalIndent(json.RawMessage(payloadJSON), "    ", "  ")
+		log.Printf("  Payload (%s):\n", payloadType)
 	}
 
 	// 发送 BatchAck

@@ -263,12 +263,26 @@ func TestProtoMessages(t *testing.T) {
 		ProbeId: "test-probe",
 		Payload: &pb.ProbeMessage_DataBatch{
 			DataBatch: &pb.DataBatch{
-				BatchId:    "test-probe-access_logs-0-100",
-				Type:       pb.DataType_DATA_TYPE_ACCESS_LOGS,
-				Data:       []byte(`[{"id":1},{"id":2}]`),
+				BatchId:    "test-probe-caddy_logs-0-100",
 				CursorFrom: 0,
 				CursorTo:   100,
 				Timestamp:  time.Now().UTC().Format(time.RFC3339),
+				Payload: &pb.DataBatch_CaddyLogs{
+					CaddyLogs: &pb.CaddyLogBatch{
+						Items: []*pb.CaddyLog{
+							{
+								Level:     "info",
+								Ts:        1738419600.123,
+								Logger:    "http.log.access",
+								Msg:       "handled request",
+								BytesRead: 0,
+								Duration:  0.123,
+								Size:      456,
+								Status:    200,
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -278,12 +292,12 @@ func TestProtoMessages(t *testing.T) {
 		t.Fatal("expected data_batch payload")
 	}
 
-	if batch.Type != pb.DataType_DATA_TYPE_ACCESS_LOGS {
-		t.Errorf("unexpected type: %v", batch.Type)
-	}
-
 	if batch.CursorFrom != 0 || batch.CursorTo != 100 {
 		t.Errorf("unexpected cursor range: %d-%d", batch.CursorFrom, batch.CursorTo)
+	}
+
+	if batch.GetCaddyLogs() == nil {
+		t.Fatal("expected caddy_logs payload")
 	}
 }
 

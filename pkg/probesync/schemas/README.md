@@ -2,102 +2,120 @@
 
 ## 概述
 
-本目录包含 `DataBatch.data` 字段的 JSON Schema 定义，用于约束和验证探针上传的数据格式。
+本目录包含 ProbeSync 批次结构的 JSON Schema 定义，用于约束和验证探针上传的数据格式。
 
 ## 为什么用 JSON Schema 而不是 Protobuf？
 
-在 `probe_sync.proto` 中，`DataBatch.data` 字段定义为 `bytes` 类型：
+在 `probe_sync.proto` 中，批次数据通过 `oneof payload` 承载：
 
 ```protobuf
 message DataBatch {
-  bytes data = 3;  // JSON 编码的数据数组
+  oneof payload {
+    CaddyLogBatch caddy_logs = 10;
+    AlertBatch alerts = 11;
+    DecisionBatch decisions = 12;
+  }
 }
 ```
 
 **设计原因**：
-1. **灵活性**: JSON 允许数据结构独立于 proto 文件演化
-2. **复用性**: 直接使用 CrowdSec 现有的 Go 数据模型 (models.Alert/Decision)
-3. **兼容性**: 老版本后端可以忽略新增字段
-4. **维护性**: 避免在 proto 和 Go struct 中重复定义相同结构
+1. **文档化**: JSON Schema 作为结构化字段的补充说明
+2. **验证**: 可选用于运行时数据一致性检查
+3. **可视化**: 便于前后端对齐字段预期
 
-**权衡**：失去了 Protobuf 的编译期类型检查
-
-**解决方案**：使用 JSON Schema 提供运行时验证和文档化
+**说明**：Protobuf 仍是唯一的强类型约束来源，Schema 用于补充说明
 
 ## Schema 文件
 
 ### 1. access_log.schema.json
-**对应**: `DATA_TYPE_ACCESS_LOGS` (DataType = 1)
+**对应**: `caddy_logs` (CaddyLogBatch)
 
-**数据来源**: `pkg/database/pusher_queries.go` 的 `GetAccessLogsAfterCursor()`
+**数据来源**: `pkg/rawlogstore/reader.go` 中的 `raw` 字段解析为 CaddyLog
 
 **字段说明**:
-- `id`: 数据库 rowid (字符串表示)
-- `acquis_type`: 采集器类型 (如 "caddy")
-- `module`: 模块名称
-- `labels`: 元数据标签对象
-- `src`: 数据源标识
-- `ts`: ISO 8601 时间戳
-- `raw`: 原始日志内容 (Caddy 结构化日志的 JSON 字符串)
+- 完整 Caddy 结构化日志字段（见 schema 文件）
 
 **示例**:
 ```json
 [
   {
-    "id": "1",
-    "acquis_type": "caddy",
-    "module": "caddy",
-    "labels": {
-      "type": "caddy"
+    "level": "info",
+    "ts": 1738419600.123,
+    "logger": "http.log.access",
+    "msg": "handled request",
+    "request": {
+      "remote_ip": "192.0.2.1",
+      "remote_port": "54321",
+      "client_ip": "192.0.2.1",
+      "proto": "HTTP/2.0",
+      "method": "GET",
+      "host": "api.hospital.local",
+      "uri": "/api/v1/patients",
+      "headers": {"User-Agent": ["Mozilla/5.0"]},
+      "tls": {
+        "resumed": false,
+        "version": 772,
+        "cipher_suite": 4865,
+        "proto": "h2",
+        "server_name": "api.hospital.local"
+      }
     },
-    "src": "caddy-logs",
-    "ts": "2026-02-01T12:00:00Z",
-    "raw": "{\"level\":\"info\",\"ts\":1738419600.123,\"request\":{\"remote_ip\":\"192.0.2.1\",...}}"
+    "bytes_read": 0,
+    "user_id": "doctor-001",
+    "duration": 0.123,
+    "size": 4567,
+    "status": 200,
+    "resp_headers": {"Content-Type": ["application/json"]}
   }
 ]
 ```
 
 ### 2. alert.schema.json
-**对应**: `DATA_TYPE_ALERTS` (DataType = 2)
+**对应**: `alerts` (AlertBatch)
 
-**数据来源**: `pkg/database/pusher_queries.go` 的 `GetAlertsAfterCursor()`
+**数据来源**: `pkg/database/pusher_queries.go` 的 `QueryAlertsAfterID()`
 
 **核心字段**:
 - `id`: Alert ID (整数)
-- `scenario`: 触发场景名称 (如 "crowdsecurity/http-probing")
-- `source_value`: 攻击源值
-- `source_scope`: 攻击源作用域 (ip/range/as/country)
+- `created_at` / `updated_at`: 创建/更新时间
+- `scenario`: 触发场景名称
+- `source_value` / `source_scope`: 攻击源信息
 - `events_count`: 关联事件数量
-- `start_at` / `stop_at`: 告警时间范围
-
-**注意**: 此结构对应 CrowdSec `models.Alert`，字段较多，详见 Schema 文件。
+- `started_at` / `stopped_at`: 告警时间范围
 
 ### 3. decision.schema.json
-**对应**: `DATA_TYPE_DECISIONS` (DataType = 3)
+**对应**: `decisions` (DecisionBatch)
 
-**数据来源**: `pkg/database/pusher_queries.go` 的 `GetDecisionsAfterCursor()`
+**数据来源**: `pkg/database/pusher_queries.go` 的 `QueryDecisionsAfterID()`
 
 **核心字段**:
 - `id`: Decision ID (整数)
-- `origin`: 决策来源 (cscli/crowdsec/CAPI/...)
-- `type`: 决策类型 (ban/captcha/throttle/whitelist)
-- `scope`: 作用域 (ip/range/as/country)
-- `value`: 目标值 (IP 地址或 CIDR)
-- `duration`: 持续时间 (如 "4h")
+- `origin`: 决策来源
+- `type`: 决策类型
+- `scope`: 作用域
+- `value`: 目标值
 - `scenario`: 关联场景
+- `start_ip/end_ip/...`: IP 范围字段
 
 **示例**:
 ```json
 [
   {
     "id": 123,
-    "origin": "cscli",
+    "origin": "crowdsec",
     "type": "ban",
-    "scope": "ip",
-    "value": "192.0.2.100",
-    "duration": "4h",
-    "scenario": "manual/ban",
-    "created_at": "2026-02-01T12:00:00Z"
+    "scope": "Ip",
+    "value": "127.0.0.1",
+    "scenario": "crowdsecurity/http-sensitive-files",
+    "created_at": "2026-01-31 10:23:21.5957794 +0000 UTC",
+    "updated_at": "2026-01-31 10:23:21.5957794 +0000 UTC",
+    "until": "2026-01-31 14:23:20.9632127 +0000 UTC",
+    "start_ip": -9223372034724069374,
+    "end_ip": -9223372034724069374,
+    "start_suffix": -9223372036854775807,
+    "end_suffix": -9223372036854775807,
+    "ip_size": 4,
+    "alert_decisions": 1
   }
 ]
 ```
@@ -117,17 +135,17 @@ import (
     "github.com/xeipuuv/gojsonschema"
 )
 
-func ValidateDataBatch(dataType pb.DataType, data []byte) error {
+func ValidateDataBatch(payloadType string, data []byte) error {
     var schemaPath string
-    switch dataType {
-    case pb.DataType_DATA_TYPE_ACCESS_LOGS:
+    switch payloadType {
+    case "caddy_logs":
         schemaPath = "file://./schemas/access_log.schema.json"
-    case pb.DataType_DATA_TYPE_ALERTS:
+    case "alerts":
         schemaPath = "file://./schemas/alert.schema.json"
-    case pb.DataType_DATA_TYPE_DECISIONS:
+    case "decisions":
         schemaPath = "file://./schemas/decision.schema.json"
     default:
-        return fmt.Errorf("unknown data type: %v", dataType)
+        return fmt.Errorf("unknown payload type: %s", payloadType)
     }
 
     schemaLoader := gojsonschema.NewReferenceLoader(schemaPath)
@@ -151,20 +169,20 @@ func ValidateDataBatch(dataType pb.DataType, data []byte) error {
 根据 DataType 反序列化到对应的 Go 结构：
 
 ```go
-type AccessLogRecord struct {
-    ID         string            `json:"id"`
-    AcquisType string            `json:"acquis_type"`
-    Module     string            `json:"module"`
-    Labels     map[string]string `json:"labels"`
-    Src        string            `json:"src"`
-    Ts         string            `json:"ts"`
-    Raw        string            `json:"raw"`
+type CaddyLogRecord struct {
+    Level    string                 `json:"level"`
+    Ts       float64                `json:"ts"`
+    Logger   string                 `json:"logger"`
+    Msg      string                 `json:"msg"`
+    Request  map[string]interface{} `json:"request"`
+    Status   int                    `json:"status"`
+    Duration float64                `json:"duration"`
 }
 
-func ParseAccessLogs(data []byte) ([]AccessLogRecord, error) {
-    var records []AccessLogRecord
+func ParseCaddyLogs(data []byte) ([]CaddyLogRecord, error) {
+    var records []CaddyLogRecord
     if err := json.Unmarshal(data, &records); err != nil {
-        return nil, fmt.Errorf("unmarshal access logs: %w", err)
+        return nil, fmt.Errorf("unmarshal caddy logs: %w", err)
     }
     return records, nil
 }
@@ -205,7 +223,7 @@ function validateAccessLogs(data: unknown): boolean {
    - 删除必需字段
    - 修改字段类型
    - 创建新版本 Schema (如 `access_log.v2.schema.json`)
-   - 在 `DataType` 枚举中添加新类型
+   - 创建新的 payload 类型
 
 ### 与 Proto 文件的关系
 

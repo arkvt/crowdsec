@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v5.29.4
-// source: proto/probe_sync.proto
+// source: probe_sync.proto
 
 package pb
 
@@ -20,59 +20,6 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
-
-// DataType 数据类型枚举
-type DataType int32
-
-const (
-	DataType_DATA_TYPE_UNSPECIFIED DataType = 0
-	DataType_DATA_TYPE_ACCESS_LOGS DataType = 1
-	DataType_DATA_TYPE_ALERTS      DataType = 2
-	DataType_DATA_TYPE_DECISIONS   DataType = 3
-)
-
-// Enum value maps for DataType.
-var (
-	DataType_name = map[int32]string{
-		0: "DATA_TYPE_UNSPECIFIED",
-		1: "DATA_TYPE_ACCESS_LOGS",
-		2: "DATA_TYPE_ALERTS",
-		3: "DATA_TYPE_DECISIONS",
-	}
-	DataType_value = map[string]int32{
-		"DATA_TYPE_UNSPECIFIED": 0,
-		"DATA_TYPE_ACCESS_LOGS": 1,
-		"DATA_TYPE_ALERTS":      2,
-		"DATA_TYPE_DECISIONS":   3,
-	}
-)
-
-func (x DataType) Enum() *DataType {
-	p := new(DataType)
-	*p = x
-	return p
-}
-
-func (x DataType) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (DataType) Descriptor() protoreflect.EnumDescriptor {
-	return file_proto_probe_sync_proto_enumTypes[0].Descriptor()
-}
-
-func (DataType) Type() protoreflect.EnumType {
-	return &file_proto_probe_sync_proto_enumTypes[0]
-}
-
-func (x DataType) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use DataType.Descriptor instead.
-func (DataType) EnumDescriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{0}
-}
 
 // CommandStatus 指令执行状态
 type CommandStatus int32
@@ -108,11 +55,11 @@ func (x CommandStatus) String() string {
 }
 
 func (CommandStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_proto_probe_sync_proto_enumTypes[1].Descriptor()
+	return file_probe_sync_proto_enumTypes[0].Descriptor()
 }
 
 func (CommandStatus) Type() protoreflect.EnumType {
-	return &file_proto_probe_sync_proto_enumTypes[1]
+	return &file_probe_sync_proto_enumTypes[0]
 }
 
 func (x CommandStatus) Number() protoreflect.EnumNumber {
@@ -121,7 +68,7 @@ func (x CommandStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CommandStatus.Descriptor instead.
 func (CommandStatus) EnumDescriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{1}
+	return file_probe_sync_proto_rawDescGZIP(), []int{0}
 }
 
 // AckStatus 确认状态枚举
@@ -161,11 +108,11 @@ func (x AckStatus) String() string {
 }
 
 func (AckStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_proto_probe_sync_proto_enumTypes[2].Descriptor()
+	return file_probe_sync_proto_enumTypes[1].Descriptor()
 }
 
 func (AckStatus) Type() protoreflect.EnumType {
-	return &file_proto_probe_sync_proto_enumTypes[2]
+	return &file_probe_sync_proto_enumTypes[1]
 }
 
 func (x AckStatus) Number() protoreflect.EnumNumber {
@@ -174,7 +121,7 @@ func (x AckStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use AckStatus.Descriptor instead.
 func (AckStatus) EnumDescriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{2}
+	return file_probe_sync_proto_rawDescGZIP(), []int{1}
 }
 
 // CommandType 指令类型枚举
@@ -226,11 +173,11 @@ func (x CommandType) String() string {
 }
 
 func (CommandType) Descriptor() protoreflect.EnumDescriptor {
-	return file_proto_probe_sync_proto_enumTypes[3].Descriptor()
+	return file_probe_sync_proto_enumTypes[2].Descriptor()
 }
 
 func (CommandType) Type() protoreflect.EnumType {
-	return &file_proto_probe_sync_proto_enumTypes[3]
+	return &file_probe_sync_proto_enumTypes[2]
 }
 
 func (x CommandType) Number() protoreflect.EnumNumber {
@@ -239,7 +186,7 @@ func (x CommandType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CommandType.Descriptor instead.
 func (CommandType) EnumDescriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{3}
+	return file_probe_sync_proto_rawDescGZIP(), []int{2}
 }
 
 // ProbeMessage 探针发送的消息
@@ -258,7 +205,7 @@ type ProbeMessage struct {
 
 func (x *ProbeMessage) Reset() {
 	*x = ProbeMessage{}
-	mi := &file_proto_probe_sync_proto_msgTypes[0]
+	mi := &file_probe_sync_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -270,7 +217,7 @@ func (x *ProbeMessage) String() string {
 func (*ProbeMessage) ProtoMessage() {}
 
 func (x *ProbeMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_probe_sync_proto_msgTypes[0]
+	mi := &file_probe_sync_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -283,7 +230,7 @@ func (x *ProbeMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProbeMessage.ProtoReflect.Descriptor instead.
 func (*ProbeMessage) Descriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{0}
+	return file_probe_sync_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *ProbeMessage) GetProbeId() string {
@@ -360,7 +307,7 @@ type Heartbeat struct {
 
 func (x *Heartbeat) Reset() {
 	*x = Heartbeat{}
-	mi := &file_proto_probe_sync_proto_msgTypes[1]
+	mi := &file_probe_sync_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -372,7 +319,7 @@ func (x *Heartbeat) String() string {
 func (*Heartbeat) ProtoMessage() {}
 
 func (x *Heartbeat) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_probe_sync_proto_msgTypes[1]
+	mi := &file_probe_sync_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -385,7 +332,7 @@ func (x *Heartbeat) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Heartbeat.ProtoReflect.Descriptor instead.
 func (*Heartbeat) Descriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{1}
+	return file_probe_sync_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Heartbeat) GetTimestamp() string {
@@ -416,7 +363,7 @@ type ProbeStatus struct {
 
 func (x *ProbeStatus) Reset() {
 	*x = ProbeStatus{}
-	mi := &file_proto_probe_sync_proto_msgTypes[2]
+	mi := &file_probe_sync_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -428,7 +375,7 @@ func (x *ProbeStatus) String() string {
 func (*ProbeStatus) ProtoMessage() {}
 
 func (x *ProbeStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_probe_sync_proto_msgTypes[2]
+	mi := &file_probe_sync_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -441,7 +388,7 @@ func (x *ProbeStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProbeStatus.ProtoReflect.Descriptor instead.
 func (*ProbeStatus) Descriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{2}
+	return file_probe_sync_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ProbeStatus) GetVersion() string {
@@ -481,20 +428,24 @@ func (x *ProbeStatus) GetPendingDecisions() int64 {
 
 // DataBatch 数据批次
 type DataBatch struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BatchId       string                 `protobuf:"bytes,1,opt,name=batch_id,json=batchId,proto3" json:"batch_id,omitempty"` // 幂等键: {probe_id}-{type}-{from}-{to}
-	Type          DataType               `protobuf:"varint,2,opt,name=type,proto3,enum=probesync.DataType" json:"type,omitempty"`
-	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"` // JSON 编码的数据数组
-	CursorFrom    int64                  `protobuf:"varint,4,opt,name=cursor_from,json=cursorFrom,proto3" json:"cursor_from,omitempty"`
-	CursorTo      int64                  `protobuf:"varint,5,opt,name=cursor_to,json=cursorTo,proto3" json:"cursor_to,omitempty"`
-	Timestamp     string                 `protobuf:"bytes,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	state      protoimpl.MessageState `protogen:"open.v1"`
+	BatchId    string                 `protobuf:"bytes,1,opt,name=batch_id,json=batchId,proto3" json:"batch_id,omitempty"` // 幂等键: {probe_id}-{payload}-{from}-{to}
+	CursorFrom int64                  `protobuf:"varint,4,opt,name=cursor_from,json=cursorFrom,proto3" json:"cursor_from,omitempty"`
+	CursorTo   int64                  `protobuf:"varint,5,opt,name=cursor_to,json=cursorTo,proto3" json:"cursor_to,omitempty"`
+	Timestamp  string                 `protobuf:"bytes,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// Types that are valid to be assigned to Payload:
+	//
+	//	*DataBatch_CaddyLogs
+	//	*DataBatch_Alerts
+	//	*DataBatch_Decisions
+	Payload       isDataBatch_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DataBatch) Reset() {
 	*x = DataBatch{}
-	mi := &file_proto_probe_sync_proto_msgTypes[3]
+	mi := &file_probe_sync_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -506,7 +457,7 @@ func (x *DataBatch) String() string {
 func (*DataBatch) ProtoMessage() {}
 
 func (x *DataBatch) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_probe_sync_proto_msgTypes[3]
+	mi := &file_probe_sync_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -519,7 +470,7 @@ func (x *DataBatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DataBatch.ProtoReflect.Descriptor instead.
 func (*DataBatch) Descriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{3}
+	return file_probe_sync_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *DataBatch) GetBatchId() string {
@@ -527,20 +478,6 @@ func (x *DataBatch) GetBatchId() string {
 		return x.BatchId
 	}
 	return ""
-}
-
-func (x *DataBatch) GetType() DataType {
-	if x != nil {
-		return x.Type
-	}
-	return DataType_DATA_TYPE_UNSPECIFIED
-}
-
-func (x *DataBatch) GetData() []byte {
-	if x != nil {
-		return x.Data
-	}
-	return nil
 }
 
 func (x *DataBatch) GetCursorFrom() int64 {
@@ -564,6 +501,971 @@ func (x *DataBatch) GetTimestamp() string {
 	return ""
 }
 
+func (x *DataBatch) GetPayload() isDataBatch_Payload {
+	if x != nil {
+		return x.Payload
+	}
+	return nil
+}
+
+func (x *DataBatch) GetCaddyLogs() *CaddyLogBatch {
+	if x != nil {
+		if x, ok := x.Payload.(*DataBatch_CaddyLogs); ok {
+			return x.CaddyLogs
+		}
+	}
+	return nil
+}
+
+func (x *DataBatch) GetAlerts() *AlertBatch {
+	if x != nil {
+		if x, ok := x.Payload.(*DataBatch_Alerts); ok {
+			return x.Alerts
+		}
+	}
+	return nil
+}
+
+func (x *DataBatch) GetDecisions() *DecisionBatch {
+	if x != nil {
+		if x, ok := x.Payload.(*DataBatch_Decisions); ok {
+			return x.Decisions
+		}
+	}
+	return nil
+}
+
+type isDataBatch_Payload interface {
+	isDataBatch_Payload()
+}
+
+type DataBatch_CaddyLogs struct {
+	CaddyLogs *CaddyLogBatch `protobuf:"bytes,10,opt,name=caddy_logs,json=caddyLogs,proto3,oneof"`
+}
+
+type DataBatch_Alerts struct {
+	Alerts *AlertBatch `protobuf:"bytes,11,opt,name=alerts,proto3,oneof"`
+}
+
+type DataBatch_Decisions struct {
+	Decisions *DecisionBatch `protobuf:"bytes,12,opt,name=decisions,proto3,oneof"`
+}
+
+func (*DataBatch_CaddyLogs) isDataBatch_Payload() {}
+
+func (*DataBatch_Alerts) isDataBatch_Payload() {}
+
+func (*DataBatch_Decisions) isDataBatch_Payload() {}
+
+// CaddyLogBatch 访问日志批次
+type CaddyLogBatch struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*CaddyLog            `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CaddyLogBatch) Reset() {
+	*x = CaddyLogBatch{}
+	mi := &file_probe_sync_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CaddyLogBatch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CaddyLogBatch) ProtoMessage() {}
+
+func (x *CaddyLogBatch) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CaddyLogBatch.ProtoReflect.Descriptor instead.
+func (*CaddyLogBatch) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *CaddyLogBatch) GetItems() []*CaddyLog {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+// CaddyLog Caddy 访问日志结构
+type CaddyLog struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Level         string                 `protobuf:"bytes,1,opt,name=level,proto3" json:"level,omitempty"`
+	Ts            float64                `protobuf:"fixed64,2,opt,name=ts,proto3" json:"ts,omitempty"`
+	Logger        string                 `protobuf:"bytes,3,opt,name=logger,proto3" json:"logger,omitempty"`
+	Msg           string                 `protobuf:"bytes,4,opt,name=msg,proto3" json:"msg,omitempty"`
+	Request       *CaddyRequest          `protobuf:"bytes,5,opt,name=request,proto3" json:"request,omitempty"`
+	BytesRead     int64                  `protobuf:"varint,6,opt,name=bytes_read,json=bytesRead,proto3" json:"bytes_read,omitempty"`
+	UserId        string                 `protobuf:"bytes,7,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Duration      float64                `protobuf:"fixed64,8,opt,name=duration,proto3" json:"duration,omitempty"`
+	Size          int64                  `protobuf:"varint,9,opt,name=size,proto3" json:"size,omitempty"`
+	Status        uint32                 `protobuf:"varint,10,opt,name=status,proto3" json:"status,omitempty"`
+	RespHeaders   map[string]*StringList `protobuf:"bytes,11,rep,name=resp_headers,json=respHeaders,proto3" json:"resp_headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CaddyLog) Reset() {
+	*x = CaddyLog{}
+	mi := &file_probe_sync_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CaddyLog) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CaddyLog) ProtoMessage() {}
+
+func (x *CaddyLog) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CaddyLog.ProtoReflect.Descriptor instead.
+func (*CaddyLog) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *CaddyLog) GetLevel() string {
+	if x != nil {
+		return x.Level
+	}
+	return ""
+}
+
+func (x *CaddyLog) GetTs() float64 {
+	if x != nil {
+		return x.Ts
+	}
+	return 0
+}
+
+func (x *CaddyLog) GetLogger() string {
+	if x != nil {
+		return x.Logger
+	}
+	return ""
+}
+
+func (x *CaddyLog) GetMsg() string {
+	if x != nil {
+		return x.Msg
+	}
+	return ""
+}
+
+func (x *CaddyLog) GetRequest() *CaddyRequest {
+	if x != nil {
+		return x.Request
+	}
+	return nil
+}
+
+func (x *CaddyLog) GetBytesRead() int64 {
+	if x != nil {
+		return x.BytesRead
+	}
+	return 0
+}
+
+func (x *CaddyLog) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *CaddyLog) GetDuration() float64 {
+	if x != nil {
+		return x.Duration
+	}
+	return 0
+}
+
+func (x *CaddyLog) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *CaddyLog) GetStatus() uint32 {
+	if x != nil {
+		return x.Status
+	}
+	return 0
+}
+
+func (x *CaddyLog) GetRespHeaders() map[string]*StringList {
+	if x != nil {
+		return x.RespHeaders
+	}
+	return nil
+}
+
+// CaddyRequest 请求详情
+type CaddyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RemoteIp      string                 `protobuf:"bytes,1,opt,name=remote_ip,json=remoteIp,proto3" json:"remote_ip,omitempty"`
+	RemotePort    string                 `protobuf:"bytes,2,opt,name=remote_port,json=remotePort,proto3" json:"remote_port,omitempty"`
+	ClientIp      string                 `protobuf:"bytes,3,opt,name=client_ip,json=clientIp,proto3" json:"client_ip,omitempty"`
+	Proto         string                 `protobuf:"bytes,4,opt,name=proto,proto3" json:"proto,omitempty"`
+	Method        string                 `protobuf:"bytes,5,opt,name=method,proto3" json:"method,omitempty"`
+	Host          string                 `protobuf:"bytes,6,opt,name=host,proto3" json:"host,omitempty"`
+	Uri           string                 `protobuf:"bytes,7,opt,name=uri,proto3" json:"uri,omitempty"`
+	Headers       map[string]*StringList `protobuf:"bytes,8,rep,name=headers,proto3" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Tls           *CaddyTls              `protobuf:"bytes,9,opt,name=tls,proto3" json:"tls,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CaddyRequest) Reset() {
+	*x = CaddyRequest{}
+	mi := &file_probe_sync_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CaddyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CaddyRequest) ProtoMessage() {}
+
+func (x *CaddyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CaddyRequest.ProtoReflect.Descriptor instead.
+func (*CaddyRequest) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CaddyRequest) GetRemoteIp() string {
+	if x != nil {
+		return x.RemoteIp
+	}
+	return ""
+}
+
+func (x *CaddyRequest) GetRemotePort() string {
+	if x != nil {
+		return x.RemotePort
+	}
+	return ""
+}
+
+func (x *CaddyRequest) GetClientIp() string {
+	if x != nil {
+		return x.ClientIp
+	}
+	return ""
+}
+
+func (x *CaddyRequest) GetProto() string {
+	if x != nil {
+		return x.Proto
+	}
+	return ""
+}
+
+func (x *CaddyRequest) GetMethod() string {
+	if x != nil {
+		return x.Method
+	}
+	return ""
+}
+
+func (x *CaddyRequest) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *CaddyRequest) GetUri() string {
+	if x != nil {
+		return x.Uri
+	}
+	return ""
+}
+
+func (x *CaddyRequest) GetHeaders() map[string]*StringList {
+	if x != nil {
+		return x.Headers
+	}
+	return nil
+}
+
+func (x *CaddyRequest) GetTls() *CaddyTls {
+	if x != nil {
+		return x.Tls
+	}
+	return nil
+}
+
+// CaddyTls TLS 信息
+type CaddyTls struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Resumed       bool                   `protobuf:"varint,1,opt,name=resumed,proto3" json:"resumed,omitempty"`
+	Version       uint32                 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
+	CipherSuite   uint32                 `protobuf:"varint,3,opt,name=cipher_suite,json=cipherSuite,proto3" json:"cipher_suite,omitempty"`
+	Proto         string                 `protobuf:"bytes,4,opt,name=proto,proto3" json:"proto,omitempty"`
+	ServerName    string                 `protobuf:"bytes,5,opt,name=server_name,json=serverName,proto3" json:"server_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CaddyTls) Reset() {
+	*x = CaddyTls{}
+	mi := &file_probe_sync_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CaddyTls) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CaddyTls) ProtoMessage() {}
+
+func (x *CaddyTls) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CaddyTls.ProtoReflect.Descriptor instead.
+func (*CaddyTls) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *CaddyTls) GetResumed() bool {
+	if x != nil {
+		return x.Resumed
+	}
+	return false
+}
+
+func (x *CaddyTls) GetVersion() uint32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *CaddyTls) GetCipherSuite() uint32 {
+	if x != nil {
+		return x.CipherSuite
+	}
+	return 0
+}
+
+func (x *CaddyTls) GetProto() string {
+	if x != nil {
+		return x.Proto
+	}
+	return ""
+}
+
+func (x *CaddyTls) GetServerName() string {
+	if x != nil {
+		return x.ServerName
+	}
+	return ""
+}
+
+// StringList 字符串列表
+type StringList struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Values        []string               `protobuf:"bytes,1,rep,name=values,proto3" json:"values,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StringList) Reset() {
+	*x = StringList{}
+	mi := &file_probe_sync_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StringList) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StringList) ProtoMessage() {}
+
+func (x *StringList) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StringList.ProtoReflect.Descriptor instead.
+func (*StringList) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *StringList) GetValues() []string {
+	if x != nil {
+		return x.Values
+	}
+	return nil
+}
+
+// AlertBatch 告警批次
+type AlertBatch struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*Alert               `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AlertBatch) Reset() {
+	*x = AlertBatch{}
+	mi := &file_probe_sync_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AlertBatch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AlertBatch) ProtoMessage() {}
+
+func (x *AlertBatch) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AlertBatch.ProtoReflect.Descriptor instead.
+func (*AlertBatch) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *AlertBatch) GetItems() []*Alert {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+// Alert 告警结构
+type Alert struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Id              int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	CreatedAt       string                 `protobuf:"bytes,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt       string                 `protobuf:"bytes,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Scenario        string                 `protobuf:"bytes,4,opt,name=scenario,proto3" json:"scenario,omitempty"`
+	BucketId        string                 `protobuf:"bytes,5,opt,name=bucket_id,json=bucketId,proto3" json:"bucket_id,omitempty"`
+	Message         string                 `protobuf:"bytes,6,opt,name=message,proto3" json:"message,omitempty"`
+	EventsCount     int32                  `protobuf:"varint,7,opt,name=events_count,json=eventsCount,proto3" json:"events_count,omitempty"`
+	StartedAt       string                 `protobuf:"bytes,8,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	StoppedAt       string                 `protobuf:"bytes,9,opt,name=stopped_at,json=stoppedAt,proto3" json:"stopped_at,omitempty"`
+	SourceIp        string                 `protobuf:"bytes,10,opt,name=source_ip,json=sourceIp,proto3" json:"source_ip,omitempty"`
+	SourceRange     string                 `protobuf:"bytes,11,opt,name=source_range,json=sourceRange,proto3" json:"source_range,omitempty"`
+	SourceAsNumber  string                 `protobuf:"bytes,12,opt,name=source_as_number,json=sourceAsNumber,proto3" json:"source_as_number,omitempty"`
+	SourceAsName    string                 `protobuf:"bytes,13,opt,name=source_as_name,json=sourceAsName,proto3" json:"source_as_name,omitempty"`
+	SourceCountry   string                 `protobuf:"bytes,14,opt,name=source_country,json=sourceCountry,proto3" json:"source_country,omitempty"`
+	SourceLatitude  float64                `protobuf:"fixed64,15,opt,name=source_latitude,json=sourceLatitude,proto3" json:"source_latitude,omitempty"`
+	SourceLongitude float64                `protobuf:"fixed64,16,opt,name=source_longitude,json=sourceLongitude,proto3" json:"source_longitude,omitempty"`
+	SourceScope     string                 `protobuf:"bytes,17,opt,name=source_scope,json=sourceScope,proto3" json:"source_scope,omitempty"`
+	SourceValue     string                 `protobuf:"bytes,18,opt,name=source_value,json=sourceValue,proto3" json:"source_value,omitempty"`
+	Capacity        int32                  `protobuf:"varint,19,opt,name=capacity,proto3" json:"capacity,omitempty"`
+	LeakSpeed       string                 `protobuf:"bytes,20,opt,name=leak_speed,json=leakSpeed,proto3" json:"leak_speed,omitempty"`
+	ScenarioVersion string                 `protobuf:"bytes,21,opt,name=scenario_version,json=scenarioVersion,proto3" json:"scenario_version,omitempty"`
+	ScenarioHash    string                 `protobuf:"bytes,22,opt,name=scenario_hash,json=scenarioHash,proto3" json:"scenario_hash,omitempty"`
+	Simulated       bool                   `protobuf:"varint,23,opt,name=simulated,proto3" json:"simulated,omitempty"`
+	Uuid            string                 `protobuf:"bytes,24,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	Remediation     bool                   `protobuf:"varint,25,opt,name=remediation,proto3" json:"remediation,omitempty"`
+	MachineAlerts   int64                  `protobuf:"varint,26,opt,name=machine_alerts,json=machineAlerts,proto3" json:"machine_alerts,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *Alert) Reset() {
+	*x = Alert{}
+	mi := &file_probe_sync_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Alert) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Alert) ProtoMessage() {}
+
+func (x *Alert) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Alert.ProtoReflect.Descriptor instead.
+func (*Alert) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *Alert) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Alert) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *Alert) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *Alert) GetScenario() string {
+	if x != nil {
+		return x.Scenario
+	}
+	return ""
+}
+
+func (x *Alert) GetBucketId() string {
+	if x != nil {
+		return x.BucketId
+	}
+	return ""
+}
+
+func (x *Alert) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *Alert) GetEventsCount() int32 {
+	if x != nil {
+		return x.EventsCount
+	}
+	return 0
+}
+
+func (x *Alert) GetStartedAt() string {
+	if x != nil {
+		return x.StartedAt
+	}
+	return ""
+}
+
+func (x *Alert) GetStoppedAt() string {
+	if x != nil {
+		return x.StoppedAt
+	}
+	return ""
+}
+
+func (x *Alert) GetSourceIp() string {
+	if x != nil {
+		return x.SourceIp
+	}
+	return ""
+}
+
+func (x *Alert) GetSourceRange() string {
+	if x != nil {
+		return x.SourceRange
+	}
+	return ""
+}
+
+func (x *Alert) GetSourceAsNumber() string {
+	if x != nil {
+		return x.SourceAsNumber
+	}
+	return ""
+}
+
+func (x *Alert) GetSourceAsName() string {
+	if x != nil {
+		return x.SourceAsName
+	}
+	return ""
+}
+
+func (x *Alert) GetSourceCountry() string {
+	if x != nil {
+		return x.SourceCountry
+	}
+	return ""
+}
+
+func (x *Alert) GetSourceLatitude() float64 {
+	if x != nil {
+		return x.SourceLatitude
+	}
+	return 0
+}
+
+func (x *Alert) GetSourceLongitude() float64 {
+	if x != nil {
+		return x.SourceLongitude
+	}
+	return 0
+}
+
+func (x *Alert) GetSourceScope() string {
+	if x != nil {
+		return x.SourceScope
+	}
+	return ""
+}
+
+func (x *Alert) GetSourceValue() string {
+	if x != nil {
+		return x.SourceValue
+	}
+	return ""
+}
+
+func (x *Alert) GetCapacity() int32 {
+	if x != nil {
+		return x.Capacity
+	}
+	return 0
+}
+
+func (x *Alert) GetLeakSpeed() string {
+	if x != nil {
+		return x.LeakSpeed
+	}
+	return ""
+}
+
+func (x *Alert) GetScenarioVersion() string {
+	if x != nil {
+		return x.ScenarioVersion
+	}
+	return ""
+}
+
+func (x *Alert) GetScenarioHash() string {
+	if x != nil {
+		return x.ScenarioHash
+	}
+	return ""
+}
+
+func (x *Alert) GetSimulated() bool {
+	if x != nil {
+		return x.Simulated
+	}
+	return false
+}
+
+func (x *Alert) GetUuid() string {
+	if x != nil {
+		return x.Uuid
+	}
+	return ""
+}
+
+func (x *Alert) GetRemediation() bool {
+	if x != nil {
+		return x.Remediation
+	}
+	return false
+}
+
+func (x *Alert) GetMachineAlerts() int64 {
+	if x != nil {
+		return x.MachineAlerts
+	}
+	return 0
+}
+
+// DecisionBatch 决策批次
+type DecisionBatch struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*Decision            `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DecisionBatch) Reset() {
+	*x = DecisionBatch{}
+	mi := &file_probe_sync_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DecisionBatch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DecisionBatch) ProtoMessage() {}
+
+func (x *DecisionBatch) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DecisionBatch.ProtoReflect.Descriptor instead.
+func (*DecisionBatch) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *DecisionBatch) GetItems() []*Decision {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+// Decision 决策结构
+type Decision struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	CreatedAt      string                 `protobuf:"bytes,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt      string                 `protobuf:"bytes,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Until          string                 `protobuf:"bytes,4,opt,name=until,proto3" json:"until,omitempty"`
+	Scenario       string                 `protobuf:"bytes,5,opt,name=scenario,proto3" json:"scenario,omitempty"`
+	Type           string                 `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty"`
+	StartIp        int64                  `protobuf:"varint,7,opt,name=start_ip,json=startIp,proto3" json:"start_ip,omitempty"`
+	EndIp          int64                  `protobuf:"varint,8,opt,name=end_ip,json=endIp,proto3" json:"end_ip,omitempty"`
+	StartSuffix    int64                  `protobuf:"varint,9,opt,name=start_suffix,json=startSuffix,proto3" json:"start_suffix,omitempty"`
+	EndSuffix      int64                  `protobuf:"varint,10,opt,name=end_suffix,json=endSuffix,proto3" json:"end_suffix,omitempty"`
+	IpSize         int64                  `protobuf:"varint,11,opt,name=ip_size,json=ipSize,proto3" json:"ip_size,omitempty"`
+	Scope          string                 `protobuf:"bytes,12,opt,name=scope,proto3" json:"scope,omitempty"`
+	Value          string                 `protobuf:"bytes,13,opt,name=value,proto3" json:"value,omitempty"`
+	Origin         string                 `protobuf:"bytes,14,opt,name=origin,proto3" json:"origin,omitempty"`
+	Simulated      bool                   `protobuf:"varint,15,opt,name=simulated,proto3" json:"simulated,omitempty"`
+	Uuid           string                 `protobuf:"bytes,16,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	AlertDecisions int64                  `protobuf:"varint,17,opt,name=alert_decisions,json=alertDecisions,proto3" json:"alert_decisions,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Decision) Reset() {
+	*x = Decision{}
+	mi := &file_probe_sync_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Decision) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Decision) ProtoMessage() {}
+
+func (x *Decision) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Decision.ProtoReflect.Descriptor instead.
+func (*Decision) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *Decision) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *Decision) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *Decision) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
+func (x *Decision) GetUntil() string {
+	if x != nil {
+		return x.Until
+	}
+	return ""
+}
+
+func (x *Decision) GetScenario() string {
+	if x != nil {
+		return x.Scenario
+	}
+	return ""
+}
+
+func (x *Decision) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *Decision) GetStartIp() int64 {
+	if x != nil {
+		return x.StartIp
+	}
+	return 0
+}
+
+func (x *Decision) GetEndIp() int64 {
+	if x != nil {
+		return x.EndIp
+	}
+	return 0
+}
+
+func (x *Decision) GetStartSuffix() int64 {
+	if x != nil {
+		return x.StartSuffix
+	}
+	return 0
+}
+
+func (x *Decision) GetEndSuffix() int64 {
+	if x != nil {
+		return x.EndSuffix
+	}
+	return 0
+}
+
+func (x *Decision) GetIpSize() int64 {
+	if x != nil {
+		return x.IpSize
+	}
+	return 0
+}
+
+func (x *Decision) GetScope() string {
+	if x != nil {
+		return x.Scope
+	}
+	return ""
+}
+
+func (x *Decision) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *Decision) GetOrigin() string {
+	if x != nil {
+		return x.Origin
+	}
+	return ""
+}
+
+func (x *Decision) GetSimulated() bool {
+	if x != nil {
+		return x.Simulated
+	}
+	return false
+}
+
+func (x *Decision) GetUuid() string {
+	if x != nil {
+		return x.Uuid
+	}
+	return ""
+}
+
+func (x *Decision) GetAlertDecisions() int64 {
+	if x != nil {
+		return x.AlertDecisions
+	}
+	return 0
+}
+
 // CommandAck 指令执行确认
 type CommandAck struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -577,7 +1479,7 @@ type CommandAck struct {
 
 func (x *CommandAck) Reset() {
 	*x = CommandAck{}
-	mi := &file_proto_probe_sync_proto_msgTypes[4]
+	mi := &file_probe_sync_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -589,7 +1491,7 @@ func (x *CommandAck) String() string {
 func (*CommandAck) ProtoMessage() {}
 
 func (x *CommandAck) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_probe_sync_proto_msgTypes[4]
+	mi := &file_probe_sync_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -602,7 +1504,7 @@ func (x *CommandAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommandAck.ProtoReflect.Descriptor instead.
 func (*CommandAck) Descriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{4}
+	return file_probe_sync_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CommandAck) GetCommandId() string {
@@ -649,7 +1551,7 @@ type BackendMessage struct {
 
 func (x *BackendMessage) Reset() {
 	*x = BackendMessage{}
-	mi := &file_proto_probe_sync_proto_msgTypes[5]
+	mi := &file_probe_sync_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -661,7 +1563,7 @@ func (x *BackendMessage) String() string {
 func (*BackendMessage) ProtoMessage() {}
 
 func (x *BackendMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_probe_sync_proto_msgTypes[5]
+	mi := &file_probe_sync_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -674,7 +1576,7 @@ func (x *BackendMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BackendMessage.ProtoReflect.Descriptor instead.
 func (*BackendMessage) Descriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{5}
+	return file_probe_sync_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *BackendMessage) GetPayload() isBackendMessage_Payload {
@@ -759,7 +1661,7 @@ type HeartbeatAck struct {
 
 func (x *HeartbeatAck) Reset() {
 	*x = HeartbeatAck{}
-	mi := &file_proto_probe_sync_proto_msgTypes[6]
+	mi := &file_probe_sync_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -771,7 +1673,7 @@ func (x *HeartbeatAck) String() string {
 func (*HeartbeatAck) ProtoMessage() {}
 
 func (x *HeartbeatAck) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_probe_sync_proto_msgTypes[6]
+	mi := &file_probe_sync_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -784,7 +1686,7 @@ func (x *HeartbeatAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatAck.ProtoReflect.Descriptor instead.
 func (*HeartbeatAck) Descriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{6}
+	return file_probe_sync_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *HeartbeatAck) GetServerTime() string {
@@ -813,7 +1715,7 @@ type BatchAck struct {
 
 func (x *BatchAck) Reset() {
 	*x = BatchAck{}
-	mi := &file_proto_probe_sync_proto_msgTypes[7]
+	mi := &file_probe_sync_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -825,7 +1727,7 @@ func (x *BatchAck) String() string {
 func (*BatchAck) ProtoMessage() {}
 
 func (x *BatchAck) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_probe_sync_proto_msgTypes[7]
+	mi := &file_probe_sync_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -838,7 +1740,7 @@ func (x *BatchAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchAck.ProtoReflect.Descriptor instead.
 func (*BatchAck) Descriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{7}
+	return file_probe_sync_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *BatchAck) GetBatchId() string {
@@ -876,7 +1778,7 @@ type Command struct {
 
 func (x *Command) Reset() {
 	*x = Command{}
-	mi := &file_proto_probe_sync_proto_msgTypes[8]
+	mi := &file_probe_sync_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -888,7 +1790,7 @@ func (x *Command) String() string {
 func (*Command) ProtoMessage() {}
 
 func (x *Command) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_probe_sync_proto_msgTypes[8]
+	mi := &file_probe_sync_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -901,7 +1803,7 @@ func (x *Command) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Command.ProtoReflect.Descriptor instead.
 func (*Command) Descriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{8}
+	return file_probe_sync_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *Command) GetId() string {
@@ -950,7 +1852,7 @@ type ConfigUpdate struct {
 
 func (x *ConfigUpdate) Reset() {
 	*x = ConfigUpdate{}
-	mi := &file_proto_probe_sync_proto_msgTypes[9]
+	mi := &file_probe_sync_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -962,7 +1864,7 @@ func (x *ConfigUpdate) String() string {
 func (*ConfigUpdate) ProtoMessage() {}
 
 func (x *ConfigUpdate) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_probe_sync_proto_msgTypes[9]
+	mi := &file_probe_sync_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -975,7 +1877,7 @@ func (x *ConfigUpdate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigUpdate.ProtoReflect.Descriptor instead.
 func (*ConfigUpdate) Descriptor() ([]byte, []int) {
-	return file_proto_probe_sync_proto_rawDescGZIP(), []int{9}
+	return file_probe_sync_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ConfigUpdate) GetVersion() string {
@@ -992,11 +1894,11 @@ func (x *ConfigUpdate) GetConfig() []byte {
 	return nil
 }
 
-var File_proto_probe_sync_proto protoreflect.FileDescriptor
+var File_probe_sync_proto protoreflect.FileDescriptor
 
-const file_proto_probe_sync_proto_rawDesc = "" +
+const file_probe_sync_proto_rawDesc = "" +
 	"\n" +
-	"\x16proto/probe_sync.proto\x12\tprobesync\"\xdb\x01\n" +
+	"\x10probe_sync.proto\x12\tprobesync\"\xdb\x01\n" +
 	"\fProbeMessage\x12\x19\n" +
 	"\bprobe_id\x18\x01 \x01(\tR\aprobeId\x124\n" +
 	"\theartbeat\x18\n" +
@@ -1014,15 +1916,122 @@ const file_proto_probe_sync_proto_rawDesc = "" +
 	"\x0euptime_seconds\x18\x02 \x01(\x03R\ruptimeSeconds\x12.\n" +
 	"\x13pending_access_logs\x18\x03 \x01(\x03R\x11pendingAccessLogs\x12%\n" +
 	"\x0epending_alerts\x18\x04 \x01(\x03R\rpendingAlerts\x12+\n" +
-	"\x11pending_decisions\x18\x05 \x01(\x03R\x10pendingDecisions\"\xbf\x01\n" +
+	"\x11pending_decisions\x18\x05 \x01(\x03R\x10pendingDecisions\"\xb3\x02\n" +
 	"\tDataBatch\x12\x19\n" +
-	"\bbatch_id\x18\x01 \x01(\tR\abatchId\x12'\n" +
-	"\x04type\x18\x02 \x01(\x0e2\x13.probesync.DataTypeR\x04type\x12\x12\n" +
-	"\x04data\x18\x03 \x01(\fR\x04data\x12\x1f\n" +
+	"\bbatch_id\x18\x01 \x01(\tR\abatchId\x12\x1f\n" +
 	"\vcursor_from\x18\x04 \x01(\x03R\n" +
 	"cursorFrom\x12\x1b\n" +
 	"\tcursor_to\x18\x05 \x01(\x03R\bcursorTo\x12\x1c\n" +
-	"\ttimestamp\x18\x06 \x01(\tR\ttimestamp\"\x8b\x01\n" +
+	"\ttimestamp\x18\x06 \x01(\tR\ttimestamp\x129\n" +
+	"\n" +
+	"caddy_logs\x18\n" +
+	" \x01(\v2\x18.probesync.CaddyLogBatchH\x00R\tcaddyLogs\x12/\n" +
+	"\x06alerts\x18\v \x01(\v2\x15.probesync.AlertBatchH\x00R\x06alerts\x128\n" +
+	"\tdecisions\x18\f \x01(\v2\x18.probesync.DecisionBatchH\x00R\tdecisionsB\t\n" +
+	"\apayload\":\n" +
+	"\rCaddyLogBatch\x12)\n" +
+	"\x05items\x18\x01 \x03(\v2\x13.probesync.CaddyLogR\x05items\"\xad\x03\n" +
+	"\bCaddyLog\x12\x14\n" +
+	"\x05level\x18\x01 \x01(\tR\x05level\x12\x0e\n" +
+	"\x02ts\x18\x02 \x01(\x01R\x02ts\x12\x16\n" +
+	"\x06logger\x18\x03 \x01(\tR\x06logger\x12\x10\n" +
+	"\x03msg\x18\x04 \x01(\tR\x03msg\x121\n" +
+	"\arequest\x18\x05 \x01(\v2\x17.probesync.CaddyRequestR\arequest\x12\x1d\n" +
+	"\n" +
+	"bytes_read\x18\x06 \x01(\x03R\tbytesRead\x12\x17\n" +
+	"\auser_id\x18\a \x01(\tR\x06userId\x12\x1a\n" +
+	"\bduration\x18\b \x01(\x01R\bduration\x12\x12\n" +
+	"\x04size\x18\t \x01(\x03R\x04size\x12\x16\n" +
+	"\x06status\x18\n" +
+	" \x01(\rR\x06status\x12G\n" +
+	"\fresp_headers\x18\v \x03(\v2$.probesync.CaddyLog.RespHeadersEntryR\vrespHeaders\x1aU\n" +
+	"\x10RespHeadersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12+\n" +
+	"\x05value\x18\x02 \x01(\v2\x15.probesync.StringListR\x05value:\x028\x01\"\xf7\x02\n" +
+	"\fCaddyRequest\x12\x1b\n" +
+	"\tremote_ip\x18\x01 \x01(\tR\bremoteIp\x12\x1f\n" +
+	"\vremote_port\x18\x02 \x01(\tR\n" +
+	"remotePort\x12\x1b\n" +
+	"\tclient_ip\x18\x03 \x01(\tR\bclientIp\x12\x14\n" +
+	"\x05proto\x18\x04 \x01(\tR\x05proto\x12\x16\n" +
+	"\x06method\x18\x05 \x01(\tR\x06method\x12\x12\n" +
+	"\x04host\x18\x06 \x01(\tR\x04host\x12\x10\n" +
+	"\x03uri\x18\a \x01(\tR\x03uri\x12>\n" +
+	"\aheaders\x18\b \x03(\v2$.probesync.CaddyRequest.HeadersEntryR\aheaders\x12%\n" +
+	"\x03tls\x18\t \x01(\v2\x13.probesync.CaddyTlsR\x03tls\x1aQ\n" +
+	"\fHeadersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12+\n" +
+	"\x05value\x18\x02 \x01(\v2\x15.probesync.StringListR\x05value:\x028\x01\"\x98\x01\n" +
+	"\bCaddyTls\x12\x18\n" +
+	"\aresumed\x18\x01 \x01(\bR\aresumed\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\rR\aversion\x12!\n" +
+	"\fcipher_suite\x18\x03 \x01(\rR\vcipherSuite\x12\x14\n" +
+	"\x05proto\x18\x04 \x01(\tR\x05proto\x12\x1f\n" +
+	"\vserver_name\x18\x05 \x01(\tR\n" +
+	"serverName\"$\n" +
+	"\n" +
+	"StringList\x12\x16\n" +
+	"\x06values\x18\x01 \x03(\tR\x06values\"4\n" +
+	"\n" +
+	"AlertBatch\x12&\n" +
+	"\x05items\x18\x01 \x03(\v2\x10.probesync.AlertR\x05items\"\xe0\x06\n" +
+	"\x05Alert\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x02 \x01(\tR\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x03 \x01(\tR\tupdatedAt\x12\x1a\n" +
+	"\bscenario\x18\x04 \x01(\tR\bscenario\x12\x1b\n" +
+	"\tbucket_id\x18\x05 \x01(\tR\bbucketId\x12\x18\n" +
+	"\amessage\x18\x06 \x01(\tR\amessage\x12!\n" +
+	"\fevents_count\x18\a \x01(\x05R\veventsCount\x12\x1d\n" +
+	"\n" +
+	"started_at\x18\b \x01(\tR\tstartedAt\x12\x1d\n" +
+	"\n" +
+	"stopped_at\x18\t \x01(\tR\tstoppedAt\x12\x1b\n" +
+	"\tsource_ip\x18\n" +
+	" \x01(\tR\bsourceIp\x12!\n" +
+	"\fsource_range\x18\v \x01(\tR\vsourceRange\x12(\n" +
+	"\x10source_as_number\x18\f \x01(\tR\x0esourceAsNumber\x12$\n" +
+	"\x0esource_as_name\x18\r \x01(\tR\fsourceAsName\x12%\n" +
+	"\x0esource_country\x18\x0e \x01(\tR\rsourceCountry\x12'\n" +
+	"\x0fsource_latitude\x18\x0f \x01(\x01R\x0esourceLatitude\x12)\n" +
+	"\x10source_longitude\x18\x10 \x01(\x01R\x0fsourceLongitude\x12!\n" +
+	"\fsource_scope\x18\x11 \x01(\tR\vsourceScope\x12!\n" +
+	"\fsource_value\x18\x12 \x01(\tR\vsourceValue\x12\x1a\n" +
+	"\bcapacity\x18\x13 \x01(\x05R\bcapacity\x12\x1d\n" +
+	"\n" +
+	"leak_speed\x18\x14 \x01(\tR\tleakSpeed\x12)\n" +
+	"\x10scenario_version\x18\x15 \x01(\tR\x0fscenarioVersion\x12#\n" +
+	"\rscenario_hash\x18\x16 \x01(\tR\fscenarioHash\x12\x1c\n" +
+	"\tsimulated\x18\x17 \x01(\bR\tsimulated\x12\x12\n" +
+	"\x04uuid\x18\x18 \x01(\tR\x04uuid\x12 \n" +
+	"\vremediation\x18\x19 \x01(\bR\vremediation\x12%\n" +
+	"\x0emachine_alerts\x18\x1a \x01(\x03R\rmachineAlerts\":\n" +
+	"\rDecisionBatch\x12)\n" +
+	"\x05items\x18\x01 \x03(\v2\x13.probesync.DecisionR\x05items\"\xca\x03\n" +
+	"\bDecision\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x02 \x01(\tR\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\x03 \x01(\tR\tupdatedAt\x12\x14\n" +
+	"\x05until\x18\x04 \x01(\tR\x05until\x12\x1a\n" +
+	"\bscenario\x18\x05 \x01(\tR\bscenario\x12\x12\n" +
+	"\x04type\x18\x06 \x01(\tR\x04type\x12\x19\n" +
+	"\bstart_ip\x18\a \x01(\x03R\astartIp\x12\x15\n" +
+	"\x06end_ip\x18\b \x01(\x03R\x05endIp\x12!\n" +
+	"\fstart_suffix\x18\t \x01(\x03R\vstartSuffix\x12\x1d\n" +
+	"\n" +
+	"end_suffix\x18\n" +
+	" \x01(\x03R\tendSuffix\x12\x17\n" +
+	"\aip_size\x18\v \x01(\x03R\x06ipSize\x12\x14\n" +
+	"\x05scope\x18\f \x01(\tR\x05scope\x12\x14\n" +
+	"\x05value\x18\r \x01(\tR\x05value\x12\x16\n" +
+	"\x06origin\x18\x0e \x01(\tR\x06origin\x12\x1c\n" +
+	"\tsimulated\x18\x0f \x01(\bR\tsimulated\x12\x12\n" +
+	"\x04uuid\x18\x10 \x01(\tR\x04uuid\x12'\n" +
+	"\x0falert_decisions\x18\x11 \x01(\x03R\x0ealertDecisions\"\x8b\x01\n" +
 	"\n" +
 	"CommandAck\x12\x1d\n" +
 	"\n" +
@@ -1055,12 +2064,7 @@ const file_proto_probe_sync_proto_rawDesc = "" +
 	"expires_at\x18\x05 \x01(\tR\texpiresAt\"@\n" +
 	"\fConfigUpdate\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\x12\x16\n" +
-	"\x06config\x18\x02 \x01(\fR\x06config*o\n" +
-	"\bDataType\x12\x19\n" +
-	"\x15DATA_TYPE_UNSPECIFIED\x10\x00\x12\x19\n" +
-	"\x15DATA_TYPE_ACCESS_LOGS\x10\x01\x12\x14\n" +
-	"\x10DATA_TYPE_ALERTS\x10\x02\x12\x17\n" +
-	"\x13DATA_TYPE_DECISIONS\x10\x03*f\n" +
+	"\x06config\x18\x02 \x01(\fR\x06config*f\n" +
 	"\rCommandStatus\x12\x1e\n" +
 	"\x1aCOMMAND_STATUS_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16COMMAND_STATUS_SUCCESS\x10\x01\x12\x19\n" +
@@ -1083,68 +2087,94 @@ const file_proto_probe_sync_proto_rawDesc = "" +
 	"\aConnect\x12\x17.probesync.ProbeMessage\x1a\x19.probesync.BackendMessage(\x010\x01B4Z2github.com/crowdsecurity/crowdsec/pkg/probesync/pbb\x06proto3"
 
 var (
-	file_proto_probe_sync_proto_rawDescOnce sync.Once
-	file_proto_probe_sync_proto_rawDescData []byte
+	file_probe_sync_proto_rawDescOnce sync.Once
+	file_probe_sync_proto_rawDescData []byte
 )
 
-func file_proto_probe_sync_proto_rawDescGZIP() []byte {
-	file_proto_probe_sync_proto_rawDescOnce.Do(func() {
-		file_proto_probe_sync_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_probe_sync_proto_rawDesc), len(file_proto_probe_sync_proto_rawDesc)))
+func file_probe_sync_proto_rawDescGZIP() []byte {
+	file_probe_sync_proto_rawDescOnce.Do(func() {
+		file_probe_sync_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_probe_sync_proto_rawDesc), len(file_probe_sync_proto_rawDesc)))
 	})
-	return file_proto_probe_sync_proto_rawDescData
+	return file_probe_sync_proto_rawDescData
 }
 
-var file_proto_probe_sync_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_proto_probe_sync_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
-var file_proto_probe_sync_proto_goTypes = []any{
-	(DataType)(0),          // 0: probesync.DataType
-	(CommandStatus)(0),     // 1: probesync.CommandStatus
-	(AckStatus)(0),         // 2: probesync.AckStatus
-	(CommandType)(0),       // 3: probesync.CommandType
-	(*ProbeMessage)(nil),   // 4: probesync.ProbeMessage
-	(*Heartbeat)(nil),      // 5: probesync.Heartbeat
-	(*ProbeStatus)(nil),    // 6: probesync.ProbeStatus
-	(*DataBatch)(nil),      // 7: probesync.DataBatch
-	(*CommandAck)(nil),     // 8: probesync.CommandAck
-	(*BackendMessage)(nil), // 9: probesync.BackendMessage
-	(*HeartbeatAck)(nil),   // 10: probesync.HeartbeatAck
-	(*BatchAck)(nil),       // 11: probesync.BatchAck
-	(*Command)(nil),        // 12: probesync.Command
-	(*ConfigUpdate)(nil),   // 13: probesync.ConfigUpdate
+var file_probe_sync_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_probe_sync_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_probe_sync_proto_goTypes = []any{
+	(CommandStatus)(0),     // 0: probesync.CommandStatus
+	(AckStatus)(0),         // 1: probesync.AckStatus
+	(CommandType)(0),       // 2: probesync.CommandType
+	(*ProbeMessage)(nil),   // 3: probesync.ProbeMessage
+	(*Heartbeat)(nil),      // 4: probesync.Heartbeat
+	(*ProbeStatus)(nil),    // 5: probesync.ProbeStatus
+	(*DataBatch)(nil),      // 6: probesync.DataBatch
+	(*CaddyLogBatch)(nil),  // 7: probesync.CaddyLogBatch
+	(*CaddyLog)(nil),       // 8: probesync.CaddyLog
+	(*CaddyRequest)(nil),   // 9: probesync.CaddyRequest
+	(*CaddyTls)(nil),       // 10: probesync.CaddyTls
+	(*StringList)(nil),     // 11: probesync.StringList
+	(*AlertBatch)(nil),     // 12: probesync.AlertBatch
+	(*Alert)(nil),          // 13: probesync.Alert
+	(*DecisionBatch)(nil),  // 14: probesync.DecisionBatch
+	(*Decision)(nil),       // 15: probesync.Decision
+	(*CommandAck)(nil),     // 16: probesync.CommandAck
+	(*BackendMessage)(nil), // 17: probesync.BackendMessage
+	(*HeartbeatAck)(nil),   // 18: probesync.HeartbeatAck
+	(*BatchAck)(nil),       // 19: probesync.BatchAck
+	(*Command)(nil),        // 20: probesync.Command
+	(*ConfigUpdate)(nil),   // 21: probesync.ConfigUpdate
+	nil,                    // 22: probesync.CaddyLog.RespHeadersEntry
+	nil,                    // 23: probesync.CaddyRequest.HeadersEntry
 }
-var file_proto_probe_sync_proto_depIdxs = []int32{
-	5,  // 0: probesync.ProbeMessage.heartbeat:type_name -> probesync.Heartbeat
-	7,  // 1: probesync.ProbeMessage.data_batch:type_name -> probesync.DataBatch
-	8,  // 2: probesync.ProbeMessage.command_ack:type_name -> probesync.CommandAck
-	6,  // 3: probesync.Heartbeat.status:type_name -> probesync.ProbeStatus
-	0,  // 4: probesync.DataBatch.type:type_name -> probesync.DataType
-	1,  // 5: probesync.CommandAck.status:type_name -> probesync.CommandStatus
-	10, // 6: probesync.BackendMessage.heartbeat_ack:type_name -> probesync.HeartbeatAck
-	11, // 7: probesync.BackendMessage.batch_ack:type_name -> probesync.BatchAck
-	12, // 8: probesync.BackendMessage.command:type_name -> probesync.Command
-	13, // 9: probesync.BackendMessage.config_update:type_name -> probesync.ConfigUpdate
-	2,  // 10: probesync.BatchAck.status:type_name -> probesync.AckStatus
-	3,  // 11: probesync.Command.type:type_name -> probesync.CommandType
-	4,  // 12: probesync.ProbeSync.Connect:input_type -> probesync.ProbeMessage
-	9,  // 13: probesync.ProbeSync.Connect:output_type -> probesync.BackendMessage
-	13, // [13:14] is the sub-list for method output_type
-	12, // [12:13] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+var file_probe_sync_proto_depIdxs = []int32{
+	4,  // 0: probesync.ProbeMessage.heartbeat:type_name -> probesync.Heartbeat
+	6,  // 1: probesync.ProbeMessage.data_batch:type_name -> probesync.DataBatch
+	16, // 2: probesync.ProbeMessage.command_ack:type_name -> probesync.CommandAck
+	5,  // 3: probesync.Heartbeat.status:type_name -> probesync.ProbeStatus
+	7,  // 4: probesync.DataBatch.caddy_logs:type_name -> probesync.CaddyLogBatch
+	12, // 5: probesync.DataBatch.alerts:type_name -> probesync.AlertBatch
+	14, // 6: probesync.DataBatch.decisions:type_name -> probesync.DecisionBatch
+	8,  // 7: probesync.CaddyLogBatch.items:type_name -> probesync.CaddyLog
+	9,  // 8: probesync.CaddyLog.request:type_name -> probesync.CaddyRequest
+	22, // 9: probesync.CaddyLog.resp_headers:type_name -> probesync.CaddyLog.RespHeadersEntry
+	23, // 10: probesync.CaddyRequest.headers:type_name -> probesync.CaddyRequest.HeadersEntry
+	10, // 11: probesync.CaddyRequest.tls:type_name -> probesync.CaddyTls
+	13, // 12: probesync.AlertBatch.items:type_name -> probesync.Alert
+	15, // 13: probesync.DecisionBatch.items:type_name -> probesync.Decision
+	0,  // 14: probesync.CommandAck.status:type_name -> probesync.CommandStatus
+	18, // 15: probesync.BackendMessage.heartbeat_ack:type_name -> probesync.HeartbeatAck
+	19, // 16: probesync.BackendMessage.batch_ack:type_name -> probesync.BatchAck
+	20, // 17: probesync.BackendMessage.command:type_name -> probesync.Command
+	21, // 18: probesync.BackendMessage.config_update:type_name -> probesync.ConfigUpdate
+	1,  // 19: probesync.BatchAck.status:type_name -> probesync.AckStatus
+	2,  // 20: probesync.Command.type:type_name -> probesync.CommandType
+	11, // 21: probesync.CaddyLog.RespHeadersEntry.value:type_name -> probesync.StringList
+	11, // 22: probesync.CaddyRequest.HeadersEntry.value:type_name -> probesync.StringList
+	3,  // 23: probesync.ProbeSync.Connect:input_type -> probesync.ProbeMessage
+	17, // 24: probesync.ProbeSync.Connect:output_type -> probesync.BackendMessage
+	24, // [24:25] is the sub-list for method output_type
+	23, // [23:24] is the sub-list for method input_type
+	23, // [23:23] is the sub-list for extension type_name
+	23, // [23:23] is the sub-list for extension extendee
+	0,  // [0:23] is the sub-list for field type_name
 }
 
-func init() { file_proto_probe_sync_proto_init() }
-func file_proto_probe_sync_proto_init() {
-	if File_proto_probe_sync_proto != nil {
+func init() { file_probe_sync_proto_init() }
+func file_probe_sync_proto_init() {
+	if File_probe_sync_proto != nil {
 		return
 	}
-	file_proto_probe_sync_proto_msgTypes[0].OneofWrappers = []any{
+	file_probe_sync_proto_msgTypes[0].OneofWrappers = []any{
 		(*ProbeMessage_Heartbeat)(nil),
 		(*ProbeMessage_DataBatch)(nil),
 		(*ProbeMessage_CommandAck)(nil),
 	}
-	file_proto_probe_sync_proto_msgTypes[5].OneofWrappers = []any{
+	file_probe_sync_proto_msgTypes[3].OneofWrappers = []any{
+		(*DataBatch_CaddyLogs)(nil),
+		(*DataBatch_Alerts)(nil),
+		(*DataBatch_Decisions)(nil),
+	}
+	file_probe_sync_proto_msgTypes[14].OneofWrappers = []any{
 		(*BackendMessage_HeartbeatAck)(nil),
 		(*BackendMessage_BatchAck)(nil),
 		(*BackendMessage_Command)(nil),
@@ -1154,18 +2184,18 @@ func file_proto_probe_sync_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_probe_sync_proto_rawDesc), len(file_proto_probe_sync_proto_rawDesc)),
-			NumEnums:      4,
-			NumMessages:   10,
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_probe_sync_proto_rawDesc), len(file_probe_sync_proto_rawDesc)),
+			NumEnums:      3,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_probe_sync_proto_goTypes,
-		DependencyIndexes: file_proto_probe_sync_proto_depIdxs,
-		EnumInfos:         file_proto_probe_sync_proto_enumTypes,
-		MessageInfos:      file_proto_probe_sync_proto_msgTypes,
+		GoTypes:           file_probe_sync_proto_goTypes,
+		DependencyIndexes: file_probe_sync_proto_depIdxs,
+		EnumInfos:         file_probe_sync_proto_enumTypes,
+		MessageInfos:      file_probe_sync_proto_msgTypes,
 	}.Build()
-	File_proto_probe_sync_proto = out.File
-	file_proto_probe_sync_proto_goTypes = nil
-	file_proto_probe_sync_proto_depIdxs = nil
+	File_probe_sync_proto = out.File
+	file_probe_sync_proto_goTypes = nil
+	file_probe_sync_proto_depIdxs = nil
 }

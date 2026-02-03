@@ -2,55 +2,77 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://scarecrow.project/schemas/decision.schema.json",
   "title": "Decision",
-  "description": "DATA_TYPE_DECISIONS 批次中单条记录的结构 (来自 CrowdSec models.Decision)",
+  "description": "decisions 批次中单条记录的结构",
   "type": "object",
-  "required": ["id", "origin", "type", "scope", "value", "duration"],
+  "required": ["id", "created_at", "updated_at", "scenario", "type", "scope", "value", "origin"],
   "properties": {
     "id": {
       "type": "integer",
       "description": "决策 ID"
     },
-    "origin": {
+    "created_at": {
       "type": "string",
-      "description": "决策来源",
-      "enum": ["cscli", "crowdsec", "CAPI", "list", "console"]
+      "description": "创建时间"
     },
-    "type": {
+    "updated_at": {
       "type": "string",
-      "description": "决策类型",
-      "enum": ["ban", "captcha", "throttle", "whitelist"]
+      "description": "更新时间"
     },
-    "scope": {
+    "until": {
       "type": "string",
-      "description": "决策作用域",
-      "enum": ["ip", "range", "as", "country"]
-    },
-    "value": {
-      "type": "string",
-      "description": "决策目标值 (IP/CIDR/AS/...)"
-    },
-    "duration": {
-      "type": "string",
-      "description": "持续时间 (如 '4h', '24h')",
-      "pattern": "^[0-9]+(ns|us|µs|ms|s|m|h)$"
+      "description": "过期时间"
     },
     "scenario": {
       "type": "string",
       "description": "关联场景"
     },
+    "type": {
+      "type": "string",
+      "description": "决策类型"
+    },
+    "start_ip": {
+      "type": "integer",
+      "description": "起始 IP"
+    },
+    "end_ip": {
+      "type": "integer",
+      "description": "结束 IP"
+    },
+    "start_suffix": {
+      "type": "integer",
+      "description": "起始后缀"
+    },
+    "end_suffix": {
+      "type": "integer",
+      "description": "结束后缀"
+    },
+    "ip_size": {
+      "type": "integer",
+      "description": "IP 大小"
+    },
+    "scope": {
+      "type": "string",
+      "description": "决策作用域"
+    },
+    "value": {
+      "type": "string",
+      "description": "决策目标值 (IP/CIDR/AS/...)"
+    },
+    "origin": {
+      "type": "string",
+      "description": "决策来源"
+    },
     "simulated": {
       "type": "boolean",
       "description": "是否为模拟决策"
     },
-    "created_at": {
+    "uuid": {
       "type": "string",
-      "format": "date-time",
-      "description": "创建时间"
+      "description": "唯一标识"
     },
-    "updated_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "更新时间"
+    "alert_decisions": {
+      "type": "integer",
+      "description": "关联告警 ID"
     }
   },
   "additionalProperties": false

@@ -1,43 +1,108 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://scarecrow.project/schemas/access_log.schema.json",
-  "title": "AccessLog",
-  "description": "DATA_TYPE_ACCESS_LOGS 批次中单条记录的结构",
+  "title": "CaddyLog",
+  "description": "caddy_logs 批次中单条记录的结构",
   "type": "object",
-  "required": ["id", "acquis_type", "module", "labels", "src", "ts", "raw"],
+  "required": ["level", "ts", "logger", "msg", "request", "bytes_read", "duration", "size", "status", "resp_headers"],
   "properties": {
-    "id": {
+    "level": {
       "type": "string",
-      "description": "唯一标识 (数据库 rowid)"
-    },
-    "acquis_type": {
-      "type": "string",
-      "description": "采集类型",
-      "examples": ["caddy", "nginx"]
-    },
-    "module": {
-      "type": "string",
-      "description": "模块名称"
-    },
-    "labels": {
-      "type": "object",
-      "description": "元数据标签 (key-value pairs)",
-      "additionalProperties": {
-        "type": "string"
-      }
-    },
-    "src": {
-      "type": "string",
-      "description": "数据源标识"
+      "description": "日志级别"
     },
     "ts": {
-      "type": "string",
-      "format": "date-time",
-      "description": "ISO 8601 时间戳"
+      "type": "number",
+      "description": "Unix 时间戳 (秒 + 小数)"
     },
-    "raw": {
+    "logger": {
       "type": "string",
-      "description": "原始日志内容 (通常是 JSON 字符串)"
+      "description": "日志器名称"
+    },
+    "msg": {
+      "type": "string",
+      "description": "日志消息"
+    },
+    "request": {
+      "type": "object",
+      "required": ["remote_ip", "remote_port", "client_ip", "proto", "method", "host", "uri", "headers"],
+      "properties": {
+        "remote_ip": {
+          "type": "string",
+          "description": "来源 IP"
+        },
+        "remote_port": {
+          "type": "string",
+          "description": "来源端口"
+        },
+        "client_ip": {
+          "type": "string",
+          "description": "客户端 IP"
+        },
+        "proto": {
+          "type": "string",
+          "description": "协议"
+        },
+        "method": {
+          "type": "string",
+          "description": "HTTP 方法"
+        },
+        "host": {
+          "type": "string",
+          "description": "Host"
+        },
+        "uri": {
+          "type": "string",
+          "description": "URI"
+        },
+        "headers": {
+          "type": "object",
+          "description": "请求头",
+          "additionalProperties": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "resumed": {"type": "boolean"},
+            "version": {"type": "integer"},
+            "cipher_suite": {"type": "integer"},
+            "proto": {"type": "string"},
+            "server_name": {"type": "string"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "bytes_read": {
+      "type": "integer",
+      "description": "读取字节数"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "用户标识"
+    },
+    "duration": {
+      "type": "number",
+      "description": "处理时长 (秒 + 小数)"
+    },
+    "size": {
+      "type": "integer",
+      "description": "响应大小"
+    },
+    "status": {
+      "type": "integer",
+      "description": "HTTP 状态码"
+    },
+    "resp_headers": {
+      "type": "object",
+      "description": "响应头",
+      "additionalProperties": {
+        "type": "array",
+        "items": {"type": "string"}
+      }
     }
   },
   "additionalProperties": false

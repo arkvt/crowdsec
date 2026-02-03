@@ -141,7 +141,7 @@ service ProbeSync {
 
 每个数据批次使用稳定的 `batch_id`:
 ```
-{probe_id}-{type}-{from_cursor}-{to_cursor}
+{probe_id}-{payload}-{from_cursor}-{to_cursor}
 ```
 
 后端对相同 `batch_id` 返回 `ACK_STATUS_DUPLICATE`，探针视为成功。
