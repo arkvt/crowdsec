@@ -50,6 +50,7 @@ type PusherSyncCfg struct {
 	AccessLogsInterval string `yaml:"access_logs_interval,omitempty"`
 	AlertsInterval     string `yaml:"alerts_interval,omitempty"`
 	DecisionsInterval  string `yaml:"decisions_interval,omitempty"`
+	HostLogsInterval   string `yaml:"host_logs_interval,omitempty"`
 	HeartbeatInterval  string `yaml:"heartbeat_interval,omitempty"`
 	BatchSize          int    `yaml:"batch_size,omitempty"`
 	MaxBatchBytes      int    `yaml:"max_batch_bytes,omitempty"`
@@ -58,6 +59,7 @@ type PusherSyncCfg struct {
 	AccessLogsIntervalDuration time.Duration `yaml:"-"`
 	AlertsIntervalDuration     time.Duration `yaml:"-"`
 	DecisionsIntervalDuration  time.Duration `yaml:"-"`
+	HostLogsIntervalDuration   time.Duration `yaml:"-"`
 	HeartbeatIntervalDuration  time.Duration `yaml:"-"`
 }
 
@@ -181,6 +183,16 @@ func loadPusherSync(p *PusherCfg) error {
 		return fmt.Errorf("invalid pusher.sync.decisions_interval: %w", err)
 	}
 	s.DecisionsIntervalDuration = d
+
+	// Host logs interval
+	if s.HostLogsInterval == "" {
+		s.HostLogsInterval = "30s"
+	}
+	d, err = time.ParseDuration(s.HostLogsInterval)
+	if err != nil {
+		return fmt.Errorf("invalid pusher.sync.host_logs_interval: %w", err)
+	}
+	s.HostLogsIntervalDuration = d
 
 	// Heartbeat interval
 	if s.HeartbeatInterval == "" {

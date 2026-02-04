@@ -56,6 +56,8 @@ pkg/
 - **access_logs**: 从 rawlogstore 读取访问日志
 - **alerts**: 从数据库读取告警
 - **decisions**: 从数据库读取决策
+- **host_activity_logs**: 从主机层 SQLite 读取文件活动日志
+- **host_protection_logs**: 从主机层 SQLite 读取文件保护日志
 - **heartbeat**: 定期心跳，报告探针状态
 - 游标管理与幂等性保证
 

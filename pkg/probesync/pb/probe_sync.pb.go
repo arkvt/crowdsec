@@ -357,6 +357,7 @@ type ProbeStatus struct {
 	PendingAccessLogs int64                  `protobuf:"varint,3,opt,name=pending_access_logs,json=pendingAccessLogs,proto3" json:"pending_access_logs,omitempty"`
 	PendingAlerts     int64                  `protobuf:"varint,4,opt,name=pending_alerts,json=pendingAlerts,proto3" json:"pending_alerts,omitempty"`
 	PendingDecisions  int64                  `protobuf:"varint,5,opt,name=pending_decisions,json=pendingDecisions,proto3" json:"pending_decisions,omitempty"`
+	PendingHostLogs   int64                  `protobuf:"varint,6,opt,name=pending_host_logs,json=pendingHostLogs,proto3" json:"pending_host_logs,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -426,6 +427,13 @@ func (x *ProbeStatus) GetPendingDecisions() int64 {
 	return 0
 }
 
+func (x *ProbeStatus) GetPendingHostLogs() int64 {
+	if x != nil {
+		return x.PendingHostLogs
+	}
+	return 0
+}
+
 // DataBatch 数据批次
 type DataBatch struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
@@ -438,6 +446,8 @@ type DataBatch struct {
 	//	*DataBatch_CaddyLogs
 	//	*DataBatch_Alerts
 	//	*DataBatch_Decisions
+	//	*DataBatch_HostActivityLogs
+	//	*DataBatch_HostProtectionLogs
 	Payload       isDataBatch_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -535,6 +545,24 @@ func (x *DataBatch) GetDecisions() *DecisionBatch {
 	return nil
 }
 
+func (x *DataBatch) GetHostActivityLogs() *HostActivityLogBatch {
+	if x != nil {
+		if x, ok := x.Payload.(*DataBatch_HostActivityLogs); ok {
+			return x.HostActivityLogs
+		}
+	}
+	return nil
+}
+
+func (x *DataBatch) GetHostProtectionLogs() *HostProtectionLogBatch {
+	if x != nil {
+		if x, ok := x.Payload.(*DataBatch_HostProtectionLogs); ok {
+			return x.HostProtectionLogs
+		}
+	}
+	return nil
+}
+
 type isDataBatch_Payload interface {
 	isDataBatch_Payload()
 }
@@ -551,11 +579,23 @@ type DataBatch_Decisions struct {
 	Decisions *DecisionBatch `protobuf:"bytes,12,opt,name=decisions,proto3,oneof"`
 }
 
+type DataBatch_HostActivityLogs struct {
+	HostActivityLogs *HostActivityLogBatch `protobuf:"bytes,13,opt,name=host_activity_logs,json=hostActivityLogs,proto3,oneof"`
+}
+
+type DataBatch_HostProtectionLogs struct {
+	HostProtectionLogs *HostProtectionLogBatch `protobuf:"bytes,14,opt,name=host_protection_logs,json=hostProtectionLogs,proto3,oneof"`
+}
+
 func (*DataBatch_CaddyLogs) isDataBatch_Payload() {}
 
 func (*DataBatch_Alerts) isDataBatch_Payload() {}
 
 func (*DataBatch_Decisions) isDataBatch_Payload() {}
+
+func (*DataBatch_HostActivityLogs) isDataBatch_Payload() {}
+
+func (*DataBatch_HostProtectionLogs) isDataBatch_Payload() {}
 
 // CaddyLogBatch 访问日志批次
 type CaddyLogBatch struct {
@@ -1293,6 +1333,322 @@ func (x *DecisionBatch) GetItems() []*Decision {
 	return nil
 }
 
+// HostActivityLogBatch 主机文件活动日志批次
+type HostActivityLogBatch struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*HostActivityLog     `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HostActivityLogBatch) Reset() {
+	*x = HostActivityLogBatch{}
+	mi := &file_probe_sync_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostActivityLogBatch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostActivityLogBatch) ProtoMessage() {}
+
+func (x *HostActivityLogBatch) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostActivityLogBatch.ProtoReflect.Descriptor instead.
+func (*HostActivityLogBatch) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *HostActivityLogBatch) GetItems() []*HostActivityLog {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+// HostActivityLog 主机文件活动日志结构
+type HostActivityLog struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Timestamp     string                 `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	FilePath      string                 `protobuf:"bytes,3,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
+	FileName      string                 `protobuf:"bytes,4,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
+	Operation     string                 `protobuf:"bytes,5,opt,name=operation,proto3" json:"operation,omitempty"`
+	User          string                 `protobuf:"bytes,6,opt,name=user,proto3" json:"user,omitempty"`
+	Process       string                 `protobuf:"bytes,7,opt,name=process,proto3" json:"process,omitempty"`
+	Validation    string                 `protobuf:"bytes,8,opt,name=validation,proto3" json:"validation,omitempty"`
+	IsFolder      int32                  `protobuf:"varint,9,opt,name=is_folder,json=isFolder,proto3" json:"is_folder,omitempty"`
+	UploadedAt    string                 `protobuf:"bytes,10,opt,name=uploaded_at,json=uploadedAt,proto3" json:"uploaded_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HostActivityLog) Reset() {
+	*x = HostActivityLog{}
+	mi := &file_probe_sync_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostActivityLog) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostActivityLog) ProtoMessage() {}
+
+func (x *HostActivityLog) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostActivityLog.ProtoReflect.Descriptor instead.
+func (*HostActivityLog) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *HostActivityLog) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *HostActivityLog) GetTimestamp() string {
+	if x != nil {
+		return x.Timestamp
+	}
+	return ""
+}
+
+func (x *HostActivityLog) GetFilePath() string {
+	if x != nil {
+		return x.FilePath
+	}
+	return ""
+}
+
+func (x *HostActivityLog) GetFileName() string {
+	if x != nil {
+		return x.FileName
+	}
+	return ""
+}
+
+func (x *HostActivityLog) GetOperation() string {
+	if x != nil {
+		return x.Operation
+	}
+	return ""
+}
+
+func (x *HostActivityLog) GetUser() string {
+	if x != nil {
+		return x.User
+	}
+	return ""
+}
+
+func (x *HostActivityLog) GetProcess() string {
+	if x != nil {
+		return x.Process
+	}
+	return ""
+}
+
+func (x *HostActivityLog) GetValidation() string {
+	if x != nil {
+		return x.Validation
+	}
+	return ""
+}
+
+func (x *HostActivityLog) GetIsFolder() int32 {
+	if x != nil {
+		return x.IsFolder
+	}
+	return 0
+}
+
+func (x *HostActivityLog) GetUploadedAt() string {
+	if x != nil {
+		return x.UploadedAt
+	}
+	return ""
+}
+
+// HostProtectionLogBatch 主机文件保护日志批次
+type HostProtectionLogBatch struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*HostProtectionLog   `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HostProtectionLogBatch) Reset() {
+	*x = HostProtectionLogBatch{}
+	mi := &file_probe_sync_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostProtectionLogBatch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostProtectionLogBatch) ProtoMessage() {}
+
+func (x *HostProtectionLogBatch) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostProtectionLogBatch.ProtoReflect.Descriptor instead.
+func (*HostProtectionLogBatch) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *HostProtectionLogBatch) GetItems() []*HostProtectionLog {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+// HostProtectionLog 主机文件保护日志结构
+type HostProtectionLog struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Timestamp      string                 `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	FilePath       string                 `protobuf:"bytes,3,opt,name=file_path,json=filePath,proto3" json:"file_path,omitempty"`
+	FileName       string                 `protobuf:"bytes,4,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
+	Action         string                 `protobuf:"bytes,5,opt,name=action,proto3" json:"action,omitempty"`
+	Success        int32                  `protobuf:"varint,6,opt,name=success,proto3" json:"success,omitempty"`
+	UnlockDuration int64                  `protobuf:"varint,7,opt,name=unlock_duration,json=unlockDuration,proto3" json:"unlock_duration,omitempty"`
+	ErrorMessage   string                 `protobuf:"bytes,8,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	UploadedAt     string                 `protobuf:"bytes,9,opt,name=uploaded_at,json=uploadedAt,proto3" json:"uploaded_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *HostProtectionLog) Reset() {
+	*x = HostProtectionLog{}
+	mi := &file_probe_sync_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HostProtectionLog) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HostProtectionLog) ProtoMessage() {}
+
+func (x *HostProtectionLog) ProtoReflect() protoreflect.Message {
+	mi := &file_probe_sync_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HostProtectionLog.ProtoReflect.Descriptor instead.
+func (*HostProtectionLog) Descriptor() ([]byte, []int) {
+	return file_probe_sync_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *HostProtectionLog) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *HostProtectionLog) GetTimestamp() string {
+	if x != nil {
+		return x.Timestamp
+	}
+	return ""
+}
+
+func (x *HostProtectionLog) GetFilePath() string {
+	if x != nil {
+		return x.FilePath
+	}
+	return ""
+}
+
+func (x *HostProtectionLog) GetFileName() string {
+	if x != nil {
+		return x.FileName
+	}
+	return ""
+}
+
+func (x *HostProtectionLog) GetAction() string {
+	if x != nil {
+		return x.Action
+	}
+	return ""
+}
+
+func (x *HostProtectionLog) GetSuccess() int32 {
+	if x != nil {
+		return x.Success
+	}
+	return 0
+}
+
+func (x *HostProtectionLog) GetUnlockDuration() int64 {
+	if x != nil {
+		return x.UnlockDuration
+	}
+	return 0
+}
+
+func (x *HostProtectionLog) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+func (x *HostProtectionLog) GetUploadedAt() string {
+	if x != nil {
+		return x.UploadedAt
+	}
+	return ""
+}
+
 // Decision 决策结构
 type Decision struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -1319,7 +1675,7 @@ type Decision struct {
 
 func (x *Decision) Reset() {
 	*x = Decision{}
-	mi := &file_probe_sync_proto_msgTypes[12]
+	mi := &file_probe_sync_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1331,7 +1687,7 @@ func (x *Decision) String() string {
 func (*Decision) ProtoMessage() {}
 
 func (x *Decision) ProtoReflect() protoreflect.Message {
-	mi := &file_probe_sync_proto_msgTypes[12]
+	mi := &file_probe_sync_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1344,7 +1700,7 @@ func (x *Decision) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Decision.ProtoReflect.Descriptor instead.
 func (*Decision) Descriptor() ([]byte, []int) {
-	return file_probe_sync_proto_rawDescGZIP(), []int{12}
+	return file_probe_sync_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *Decision) GetId() int64 {
@@ -1479,7 +1835,7 @@ type CommandAck struct {
 
 func (x *CommandAck) Reset() {
 	*x = CommandAck{}
-	mi := &file_probe_sync_proto_msgTypes[13]
+	mi := &file_probe_sync_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1491,7 +1847,7 @@ func (x *CommandAck) String() string {
 func (*CommandAck) ProtoMessage() {}
 
 func (x *CommandAck) ProtoReflect() protoreflect.Message {
-	mi := &file_probe_sync_proto_msgTypes[13]
+	mi := &file_probe_sync_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1504,7 +1860,7 @@ func (x *CommandAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommandAck.ProtoReflect.Descriptor instead.
 func (*CommandAck) Descriptor() ([]byte, []int) {
-	return file_probe_sync_proto_rawDescGZIP(), []int{13}
+	return file_probe_sync_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *CommandAck) GetCommandId() string {
@@ -1551,7 +1907,7 @@ type BackendMessage struct {
 
 func (x *BackendMessage) Reset() {
 	*x = BackendMessage{}
-	mi := &file_probe_sync_proto_msgTypes[14]
+	mi := &file_probe_sync_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1563,7 +1919,7 @@ func (x *BackendMessage) String() string {
 func (*BackendMessage) ProtoMessage() {}
 
 func (x *BackendMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_probe_sync_proto_msgTypes[14]
+	mi := &file_probe_sync_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1576,7 +1932,7 @@ func (x *BackendMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BackendMessage.ProtoReflect.Descriptor instead.
 func (*BackendMessage) Descriptor() ([]byte, []int) {
-	return file_probe_sync_proto_rawDescGZIP(), []int{14}
+	return file_probe_sync_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *BackendMessage) GetPayload() isBackendMessage_Payload {
@@ -1661,7 +2017,7 @@ type HeartbeatAck struct {
 
 func (x *HeartbeatAck) Reset() {
 	*x = HeartbeatAck{}
-	mi := &file_probe_sync_proto_msgTypes[15]
+	mi := &file_probe_sync_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1673,7 +2029,7 @@ func (x *HeartbeatAck) String() string {
 func (*HeartbeatAck) ProtoMessage() {}
 
 func (x *HeartbeatAck) ProtoReflect() protoreflect.Message {
-	mi := &file_probe_sync_proto_msgTypes[15]
+	mi := &file_probe_sync_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1686,7 +2042,7 @@ func (x *HeartbeatAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HeartbeatAck.ProtoReflect.Descriptor instead.
 func (*HeartbeatAck) Descriptor() ([]byte, []int) {
-	return file_probe_sync_proto_rawDescGZIP(), []int{15}
+	return file_probe_sync_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *HeartbeatAck) GetServerTime() string {
@@ -1715,7 +2071,7 @@ type BatchAck struct {
 
 func (x *BatchAck) Reset() {
 	*x = BatchAck{}
-	mi := &file_probe_sync_proto_msgTypes[16]
+	mi := &file_probe_sync_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1727,7 +2083,7 @@ func (x *BatchAck) String() string {
 func (*BatchAck) ProtoMessage() {}
 
 func (x *BatchAck) ProtoReflect() protoreflect.Message {
-	mi := &file_probe_sync_proto_msgTypes[16]
+	mi := &file_probe_sync_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1740,7 +2096,7 @@ func (x *BatchAck) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchAck.ProtoReflect.Descriptor instead.
 func (*BatchAck) Descriptor() ([]byte, []int) {
-	return file_probe_sync_proto_rawDescGZIP(), []int{16}
+	return file_probe_sync_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *BatchAck) GetBatchId() string {
@@ -1778,7 +2134,7 @@ type Command struct {
 
 func (x *Command) Reset() {
 	*x = Command{}
-	mi := &file_probe_sync_proto_msgTypes[17]
+	mi := &file_probe_sync_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1790,7 +2146,7 @@ func (x *Command) String() string {
 func (*Command) ProtoMessage() {}
 
 func (x *Command) ProtoReflect() protoreflect.Message {
-	mi := &file_probe_sync_proto_msgTypes[17]
+	mi := &file_probe_sync_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1803,7 +2159,7 @@ func (x *Command) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Command.ProtoReflect.Descriptor instead.
 func (*Command) Descriptor() ([]byte, []int) {
-	return file_probe_sync_proto_rawDescGZIP(), []int{17}
+	return file_probe_sync_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *Command) GetId() string {
@@ -1852,7 +2208,7 @@ type ConfigUpdate struct {
 
 func (x *ConfigUpdate) Reset() {
 	*x = ConfigUpdate{}
-	mi := &file_probe_sync_proto_msgTypes[18]
+	mi := &file_probe_sync_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1864,7 +2220,7 @@ func (x *ConfigUpdate) String() string {
 func (*ConfigUpdate) ProtoMessage() {}
 
 func (x *ConfigUpdate) ProtoReflect() protoreflect.Message {
-	mi := &file_probe_sync_proto_msgTypes[18]
+	mi := &file_probe_sync_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1877,7 +2233,7 @@ func (x *ConfigUpdate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConfigUpdate.ProtoReflect.Descriptor instead.
 func (*ConfigUpdate) Descriptor() ([]byte, []int) {
-	return file_probe_sync_proto_rawDescGZIP(), []int{18}
+	return file_probe_sync_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *ConfigUpdate) GetVersion() string {
@@ -1910,13 +2266,14 @@ const file_probe_sync_proto_rawDesc = "" +
 	"\apayload\"Y\n" +
 	"\tHeartbeat\x12\x1c\n" +
 	"\ttimestamp\x18\x01 \x01(\tR\ttimestamp\x12.\n" +
-	"\x06status\x18\x02 \x01(\v2\x16.probesync.ProbeStatusR\x06status\"\xd2\x01\n" +
+	"\x06status\x18\x02 \x01(\v2\x16.probesync.ProbeStatusR\x06status\"\xfe\x01\n" +
 	"\vProbeStatus\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\tR\aversion\x12%\n" +
 	"\x0euptime_seconds\x18\x02 \x01(\x03R\ruptimeSeconds\x12.\n" +
 	"\x13pending_access_logs\x18\x03 \x01(\x03R\x11pendingAccessLogs\x12%\n" +
 	"\x0epending_alerts\x18\x04 \x01(\x03R\rpendingAlerts\x12+\n" +
-	"\x11pending_decisions\x18\x05 \x01(\x03R\x10pendingDecisions\"\xb3\x02\n" +
+	"\x11pending_decisions\x18\x05 \x01(\x03R\x10pendingDecisions\x12*\n" +
+	"\x11pending_host_logs\x18\x06 \x01(\x03R\x0fpendingHostLogs\"\xdb\x03\n" +
 	"\tDataBatch\x12\x19\n" +
 	"\bbatch_id\x18\x01 \x01(\tR\abatchId\x12\x1f\n" +
 	"\vcursor_from\x18\x04 \x01(\x03R\n" +
@@ -1927,7 +2284,9 @@ const file_probe_sync_proto_rawDesc = "" +
 	"caddy_logs\x18\n" +
 	" \x01(\v2\x18.probesync.CaddyLogBatchH\x00R\tcaddyLogs\x12/\n" +
 	"\x06alerts\x18\v \x01(\v2\x15.probesync.AlertBatchH\x00R\x06alerts\x128\n" +
-	"\tdecisions\x18\f \x01(\v2\x18.probesync.DecisionBatchH\x00R\tdecisionsB\t\n" +
+	"\tdecisions\x18\f \x01(\v2\x18.probesync.DecisionBatchH\x00R\tdecisions\x12O\n" +
+	"\x12host_activity_logs\x18\r \x01(\v2\x1f.probesync.HostActivityLogBatchH\x00R\x10hostActivityLogs\x12U\n" +
+	"\x14host_protection_logs\x18\x0e \x01(\v2!.probesync.HostProtectionLogBatchH\x00R\x12hostProtectionLogsB\t\n" +
 	"\apayload\":\n" +
 	"\rCaddyLogBatch\x12)\n" +
 	"\x05items\x18\x01 \x03(\v2\x13.probesync.CaddyLogR\x05items\"\xad\x03\n" +
@@ -2009,7 +2368,37 @@ const file_probe_sync_proto_rawDesc = "" +
 	"\vremediation\x18\x19 \x01(\bR\vremediation\x12%\n" +
 	"\x0emachine_alerts\x18\x1a \x01(\x03R\rmachineAlerts\":\n" +
 	"\rDecisionBatch\x12)\n" +
-	"\x05items\x18\x01 \x03(\v2\x13.probesync.DecisionR\x05items\"\xca\x03\n" +
+	"\x05items\x18\x01 \x03(\v2\x13.probesync.DecisionR\x05items\"H\n" +
+	"\x14HostActivityLogBatch\x120\n" +
+	"\x05items\x18\x01 \x03(\v2\x1a.probesync.HostActivityLogR\x05items\"\xa3\x02\n" +
+	"\x0fHostActivityLog\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1c\n" +
+	"\ttimestamp\x18\x02 \x01(\tR\ttimestamp\x12\x1b\n" +
+	"\tfile_path\x18\x03 \x01(\tR\bfilePath\x12\x1b\n" +
+	"\tfile_name\x18\x04 \x01(\tR\bfileName\x12\x1c\n" +
+	"\toperation\x18\x05 \x01(\tR\toperation\x12\x12\n" +
+	"\x04user\x18\x06 \x01(\tR\x04user\x12\x18\n" +
+	"\aprocess\x18\a \x01(\tR\aprocess\x12\x1e\n" +
+	"\n" +
+	"validation\x18\b \x01(\tR\n" +
+	"validation\x12\x1b\n" +
+	"\tis_folder\x18\t \x01(\x05R\bisFolder\x12\x1f\n" +
+	"\vuploaded_at\x18\n" +
+	" \x01(\tR\n" +
+	"uploadedAt\"L\n" +
+	"\x16HostProtectionLogBatch\x122\n" +
+	"\x05items\x18\x01 \x03(\v2\x1c.probesync.HostProtectionLogR\x05items\"\x9c\x02\n" +
+	"\x11HostProtectionLog\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1c\n" +
+	"\ttimestamp\x18\x02 \x01(\tR\ttimestamp\x12\x1b\n" +
+	"\tfile_path\x18\x03 \x01(\tR\bfilePath\x12\x1b\n" +
+	"\tfile_name\x18\x04 \x01(\tR\bfileName\x12\x16\n" +
+	"\x06action\x18\x05 \x01(\tR\x06action\x12\x18\n" +
+	"\asuccess\x18\x06 \x01(\x05R\asuccess\x12'\n" +
+	"\x0funlock_duration\x18\a \x01(\x03R\x0eunlockDuration\x12#\n" +
+	"\rerror_message\x18\b \x01(\tR\ferrorMessage\x12\x1f\n" +
+	"\vuploaded_at\x18\t \x01(\tR\n" +
+	"uploadedAt\"\xca\x03\n" +
 	"\bDecision\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1d\n" +
 	"\n" +
@@ -2099,64 +2488,72 @@ func file_probe_sync_proto_rawDescGZIP() []byte {
 }
 
 var file_probe_sync_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_probe_sync_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_probe_sync_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_probe_sync_proto_goTypes = []any{
-	(CommandStatus)(0),     // 0: probesync.CommandStatus
-	(AckStatus)(0),         // 1: probesync.AckStatus
-	(CommandType)(0),       // 2: probesync.CommandType
-	(*ProbeMessage)(nil),   // 3: probesync.ProbeMessage
-	(*Heartbeat)(nil),      // 4: probesync.Heartbeat
-	(*ProbeStatus)(nil),    // 5: probesync.ProbeStatus
-	(*DataBatch)(nil),      // 6: probesync.DataBatch
-	(*CaddyLogBatch)(nil),  // 7: probesync.CaddyLogBatch
-	(*CaddyLog)(nil),       // 8: probesync.CaddyLog
-	(*CaddyRequest)(nil),   // 9: probesync.CaddyRequest
-	(*CaddyTls)(nil),       // 10: probesync.CaddyTls
-	(*StringList)(nil),     // 11: probesync.StringList
-	(*AlertBatch)(nil),     // 12: probesync.AlertBatch
-	(*Alert)(nil),          // 13: probesync.Alert
-	(*DecisionBatch)(nil),  // 14: probesync.DecisionBatch
-	(*Decision)(nil),       // 15: probesync.Decision
-	(*CommandAck)(nil),     // 16: probesync.CommandAck
-	(*BackendMessage)(nil), // 17: probesync.BackendMessage
-	(*HeartbeatAck)(nil),   // 18: probesync.HeartbeatAck
-	(*BatchAck)(nil),       // 19: probesync.BatchAck
-	(*Command)(nil),        // 20: probesync.Command
-	(*ConfigUpdate)(nil),   // 21: probesync.ConfigUpdate
-	nil,                    // 22: probesync.CaddyLog.RespHeadersEntry
-	nil,                    // 23: probesync.CaddyRequest.HeadersEntry
+	(CommandStatus)(0),             // 0: probesync.CommandStatus
+	(AckStatus)(0),                 // 1: probesync.AckStatus
+	(CommandType)(0),               // 2: probesync.CommandType
+	(*ProbeMessage)(nil),           // 3: probesync.ProbeMessage
+	(*Heartbeat)(nil),              // 4: probesync.Heartbeat
+	(*ProbeStatus)(nil),            // 5: probesync.ProbeStatus
+	(*DataBatch)(nil),              // 6: probesync.DataBatch
+	(*CaddyLogBatch)(nil),          // 7: probesync.CaddyLogBatch
+	(*CaddyLog)(nil),               // 8: probesync.CaddyLog
+	(*CaddyRequest)(nil),           // 9: probesync.CaddyRequest
+	(*CaddyTls)(nil),               // 10: probesync.CaddyTls
+	(*StringList)(nil),             // 11: probesync.StringList
+	(*AlertBatch)(nil),             // 12: probesync.AlertBatch
+	(*Alert)(nil),                  // 13: probesync.Alert
+	(*DecisionBatch)(nil),          // 14: probesync.DecisionBatch
+	(*HostActivityLogBatch)(nil),   // 15: probesync.HostActivityLogBatch
+	(*HostActivityLog)(nil),        // 16: probesync.HostActivityLog
+	(*HostProtectionLogBatch)(nil), // 17: probesync.HostProtectionLogBatch
+	(*HostProtectionLog)(nil),      // 18: probesync.HostProtectionLog
+	(*Decision)(nil),               // 19: probesync.Decision
+	(*CommandAck)(nil),             // 20: probesync.CommandAck
+	(*BackendMessage)(nil),         // 21: probesync.BackendMessage
+	(*HeartbeatAck)(nil),           // 22: probesync.HeartbeatAck
+	(*BatchAck)(nil),               // 23: probesync.BatchAck
+	(*Command)(nil),                // 24: probesync.Command
+	(*ConfigUpdate)(nil),           // 25: probesync.ConfigUpdate
+	nil,                            // 26: probesync.CaddyLog.RespHeadersEntry
+	nil,                            // 27: probesync.CaddyRequest.HeadersEntry
 }
 var file_probe_sync_proto_depIdxs = []int32{
 	4,  // 0: probesync.ProbeMessage.heartbeat:type_name -> probesync.Heartbeat
 	6,  // 1: probesync.ProbeMessage.data_batch:type_name -> probesync.DataBatch
-	16, // 2: probesync.ProbeMessage.command_ack:type_name -> probesync.CommandAck
+	20, // 2: probesync.ProbeMessage.command_ack:type_name -> probesync.CommandAck
 	5,  // 3: probesync.Heartbeat.status:type_name -> probesync.ProbeStatus
 	7,  // 4: probesync.DataBatch.caddy_logs:type_name -> probesync.CaddyLogBatch
 	12, // 5: probesync.DataBatch.alerts:type_name -> probesync.AlertBatch
 	14, // 6: probesync.DataBatch.decisions:type_name -> probesync.DecisionBatch
-	8,  // 7: probesync.CaddyLogBatch.items:type_name -> probesync.CaddyLog
-	9,  // 8: probesync.CaddyLog.request:type_name -> probesync.CaddyRequest
-	22, // 9: probesync.CaddyLog.resp_headers:type_name -> probesync.CaddyLog.RespHeadersEntry
-	23, // 10: probesync.CaddyRequest.headers:type_name -> probesync.CaddyRequest.HeadersEntry
-	10, // 11: probesync.CaddyRequest.tls:type_name -> probesync.CaddyTls
-	13, // 12: probesync.AlertBatch.items:type_name -> probesync.Alert
-	15, // 13: probesync.DecisionBatch.items:type_name -> probesync.Decision
-	0,  // 14: probesync.CommandAck.status:type_name -> probesync.CommandStatus
-	18, // 15: probesync.BackendMessage.heartbeat_ack:type_name -> probesync.HeartbeatAck
-	19, // 16: probesync.BackendMessage.batch_ack:type_name -> probesync.BatchAck
-	20, // 17: probesync.BackendMessage.command:type_name -> probesync.Command
-	21, // 18: probesync.BackendMessage.config_update:type_name -> probesync.ConfigUpdate
-	1,  // 19: probesync.BatchAck.status:type_name -> probesync.AckStatus
-	2,  // 20: probesync.Command.type:type_name -> probesync.CommandType
-	11, // 21: probesync.CaddyLog.RespHeadersEntry.value:type_name -> probesync.StringList
-	11, // 22: probesync.CaddyRequest.HeadersEntry.value:type_name -> probesync.StringList
-	3,  // 23: probesync.ProbeSync.Connect:input_type -> probesync.ProbeMessage
-	17, // 24: probesync.ProbeSync.Connect:output_type -> probesync.BackendMessage
-	24, // [24:25] is the sub-list for method output_type
-	23, // [23:24] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	15, // 7: probesync.DataBatch.host_activity_logs:type_name -> probesync.HostActivityLogBatch
+	17, // 8: probesync.DataBatch.host_protection_logs:type_name -> probesync.HostProtectionLogBatch
+	8,  // 9: probesync.CaddyLogBatch.items:type_name -> probesync.CaddyLog
+	9,  // 10: probesync.CaddyLog.request:type_name -> probesync.CaddyRequest
+	26, // 11: probesync.CaddyLog.resp_headers:type_name -> probesync.CaddyLog.RespHeadersEntry
+	27, // 12: probesync.CaddyRequest.headers:type_name -> probesync.CaddyRequest.HeadersEntry
+	10, // 13: probesync.CaddyRequest.tls:type_name -> probesync.CaddyTls
+	13, // 14: probesync.AlertBatch.items:type_name -> probesync.Alert
+	19, // 15: probesync.DecisionBatch.items:type_name -> probesync.Decision
+	16, // 16: probesync.HostActivityLogBatch.items:type_name -> probesync.HostActivityLog
+	18, // 17: probesync.HostProtectionLogBatch.items:type_name -> probesync.HostProtectionLog
+	0,  // 18: probesync.CommandAck.status:type_name -> probesync.CommandStatus
+	22, // 19: probesync.BackendMessage.heartbeat_ack:type_name -> probesync.HeartbeatAck
+	23, // 20: probesync.BackendMessage.batch_ack:type_name -> probesync.BatchAck
+	24, // 21: probesync.BackendMessage.command:type_name -> probesync.Command
+	25, // 22: probesync.BackendMessage.config_update:type_name -> probesync.ConfigUpdate
+	1,  // 23: probesync.BatchAck.status:type_name -> probesync.AckStatus
+	2,  // 24: probesync.Command.type:type_name -> probesync.CommandType
+	11, // 25: probesync.CaddyLog.RespHeadersEntry.value:type_name -> probesync.StringList
+	11, // 26: probesync.CaddyRequest.HeadersEntry.value:type_name -> probesync.StringList
+	3,  // 27: probesync.ProbeSync.Connect:input_type -> probesync.ProbeMessage
+	21, // 28: probesync.ProbeSync.Connect:output_type -> probesync.BackendMessage
+	28, // [28:29] is the sub-list for method output_type
+	27, // [27:28] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_probe_sync_proto_init() }
@@ -2173,8 +2570,10 @@ func file_probe_sync_proto_init() {
 		(*DataBatch_CaddyLogs)(nil),
 		(*DataBatch_Alerts)(nil),
 		(*DataBatch_Decisions)(nil),
+		(*DataBatch_HostActivityLogs)(nil),
+		(*DataBatch_HostProtectionLogs)(nil),
 	}
-	file_probe_sync_proto_msgTypes[14].OneofWrappers = []any{
+	file_probe_sync_proto_msgTypes[18].OneofWrappers = []any{
 		(*BackendMessage_HeartbeatAck)(nil),
 		(*BackendMessage_BatchAck)(nil),
 		(*BackendMessage_Command)(nil),
@@ -2186,7 +2585,7 @@ func file_probe_sync_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_probe_sync_proto_rawDesc), len(file_probe_sync_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   21,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

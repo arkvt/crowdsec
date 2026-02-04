@@ -19,6 +19,7 @@ import (
 
 	"github.com/crowdsecurity/crowdsec/pkg/csconfig"
 	"github.com/crowdsecurity/crowdsec/pkg/database"
+	"github.com/crowdsecurity/crowdsec/pkg/hostlogstore"
 	pb "github.com/crowdsecurity/crowdsec/pkg/probesync/pb"
 	"github.com/crowdsecurity/crowdsec/pkg/rawlogstore"
 )
@@ -34,12 +35,13 @@ const (
 
 // Pusher 负责与后端建立 gRPC 双向流并维持连接
 type Pusher struct {
-	cfg          *csconfig.PusherCfg
-	state        *State
-	rawlogReader *rawlogstore.Reader
-	dbClient     *database.Client
-	executor     *Executor
-	logger       *log.Entry
+	cfg           *csconfig.PusherCfg
+	state         *State
+	rawlogReader  *rawlogstore.Reader
+	hostlogReader *hostlogstore.Reader
+	dbClient      *database.Client
+	executor      *Executor
+	logger        *log.Entry
 
 	conn   *grpc.ClientConn
 	client pb.ProbeSyncClient
@@ -55,7 +57,7 @@ type Pusher struct {
 }
 
 // NewPusher 创建 gRPC Pusher 实例
-func NewPusher(cfg *csconfig.PusherCfg, rawlogReader *rawlogstore.Reader, dbClient *database.Client, lapiCfg *csconfig.LocalApiClientCfg) (*Pusher, error) {
+func NewPusher(cfg *csconfig.PusherCfg, rawlogReader *rawlogstore.Reader, hostlogReader *hostlogstore.Reader, dbClient *database.Client, lapiCfg *csconfig.LocalApiClientCfg) (*Pusher, error) {
 	logger := log.WithField("component", "pusher")
 
 	// 加载状态
@@ -65,14 +67,15 @@ func NewPusher(cfg *csconfig.PusherCfg, rawlogReader *rawlogstore.Reader, dbClie
 	}
 
 	p := &Pusher{
-		cfg:          cfg,
-		state:        state,
-		rawlogReader: rawlogReader,
-		dbClient:     dbClient,
-		executor:     NewExecutor(dbClient, logger, lapiCfg),
-		logger:       logger,
-		ackCh:        make(chan *pb.BatchAck, 100),
-		stopCh:       make(chan struct{}),
+		cfg:           cfg,
+		state:         state,
+		rawlogReader:  rawlogReader,
+		hostlogReader: hostlogReader,
+		dbClient:      dbClient,
+		executor:      NewExecutor(dbClient, logger, lapiCfg),
+		logger:        logger,
+		ackCh:         make(chan *pb.BatchAck, 100),
+		stopCh:        make(chan struct{}),
 	}
 
 	return p, nil
@@ -118,6 +121,11 @@ func (p *Pusher) Stop() {
 		if p.rawlogReader != nil {
 			if err := p.rawlogReader.Close(); err != nil {
 				p.logger.WithError(err).Warn("failed to close rawlog reader")
+			}
+		}
+		if p.hostlogReader != nil {
+			if err := p.hostlogReader.Close(); err != nil {
+				p.logger.WithError(err).Warn("failed to close hostlog reader")
 			}
 		}
 
@@ -269,7 +277,7 @@ func (p *Pusher) connectionManager(ctx context.Context) {
 					p.logger.WithField("panic", r).Error("sender panic")
 				}
 			}()
-			sender := NewSender(p.cfg, p.state, p.rawlogReader, p.dbClient, p.logger)
+			sender := NewSender(p.cfg, p.state, p.rawlogReader, p.hostlogReader, p.dbClient, p.logger)
 			if err := sender.Run(streamCtx, stream, p.ackCh); err != nil {
 				errCh <- fmt.Errorf("sender error: %w", err)
 			}

@@ -20,6 +20,7 @@ import (
 	"github.com/crowdsecurity/crowdsec/pkg/cwhub"
 	"github.com/crowdsecurity/crowdsec/pkg/database"
 	"github.com/crowdsecurity/crowdsec/pkg/exprhelpers"
+	"github.com/crowdsecurity/crowdsec/pkg/hostlogstore"
 	"github.com/crowdsecurity/crowdsec/pkg/leakybucket"
 	"github.com/crowdsecurity/crowdsec/pkg/metrics"
 	"github.com/crowdsecurity/crowdsec/pkg/parser"
@@ -185,6 +186,19 @@ func runCrowdsec(
 			}
 		}
 
+		var hostlogReader *hostlogstore.Reader
+		if cConfig.Crowdsec.Pusher.Sync != nil && cConfig.Crowdsec.Pusher.Sync.HostLogsInterval != "" {
+			hostLogPath := os.Getenv("SCARECROW_HOST_LOG_DB")
+			if hostLogPath == "" {
+				log.Debug("SCARECROW_HOST_LOG_DB not set, host log sync disabled")
+			} else {
+				hostlogReader, err = hostlogstore.NewReader(hostLogPath, log.WithField("service", "hostlogstore-reader"))
+				if err != nil {
+					log.WithError(err).Warn("failed to create hostlog reader, host log sync will be disabled")
+				}
+			}
+		}
+
 		var dbClient *database.Client
 		if cConfig.DbConfig != nil {
 			dbCfg := cConfig.DbConfig
@@ -194,7 +208,7 @@ func runCrowdsec(
 			}
 		}
 
-		pusherInstance, err := pusher.NewPusher(cConfig.Crowdsec.Pusher, rawlogReader, dbClient, cConfig.API.Client)
+		pusherInstance, err := pusher.NewPusher(cConfig.Crowdsec.Pusher, rawlogReader, hostlogReader, dbClient, cConfig.API.Client)
 		if err != nil {
 			log.WithError(err).Error("failed to initialize pusher")
 		} else {

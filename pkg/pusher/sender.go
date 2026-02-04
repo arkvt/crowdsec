@@ -13,6 +13,7 @@ import (
 
 	"github.com/crowdsecurity/crowdsec/pkg/csconfig"
 	"github.com/crowdsecurity/crowdsec/pkg/database"
+	"github.com/crowdsecurity/crowdsec/pkg/hostlogstore"
 	pb "github.com/crowdsecurity/crowdsec/pkg/probesync/pb"
 	"github.com/crowdsecurity/crowdsec/pkg/rawlogstore"
 )
@@ -35,6 +36,7 @@ type Sender struct {
 	cfg           *csconfig.PusherCfg
 	state         *State
 	rawlogReader  *rawlogstore.Reader
+	hostlogReader *hostlogstore.Reader
 	dbClient      *database.Client
 	logger        *log.Entry
 	startTime     time.Time
@@ -48,11 +50,12 @@ type Sender struct {
 }
 
 // NewSender 创建 Sender
-func NewSender(cfg *csconfig.PusherCfg, state *State, rawlogReader *rawlogstore.Reader, dbClient *database.Client, logger *log.Entry) *Sender {
+func NewSender(cfg *csconfig.PusherCfg, state *State, rawlogReader *rawlogstore.Reader, hostlogReader *hostlogstore.Reader, dbClient *database.Client, logger *log.Entry) *Sender {
 	return &Sender{
 		cfg:           cfg,
 		state:         state,
 		rawlogReader:  rawlogReader,
+		hostlogReader: hostlogReader,
 		dbClient:      dbClient,
 		logger:        logger.WithField("module", "sender"),
 		pendingAcks:   make(map[string]chan *pb.BatchAck),
@@ -77,11 +80,13 @@ func (s *Sender) Run(ctx context.Context, stream pb.ProbeSync_ConnectClient, ack
 	accessLogsTicker := time.NewTicker(s.syncInterval("access_logs"))
 	alertsTicker := time.NewTicker(s.syncInterval("alerts"))
 	decisionsTicker := time.NewTicker(s.syncInterval("decisions"))
+	hostLogsTicker := time.NewTicker(s.syncInterval("host_logs"))
 
 	defer heartbeatTicker.Stop()
 	defer accessLogsTicker.Stop()
 	defer alertsTicker.Stop()
 	defer decisionsTicker.Stop()
+	defer hostLogsTicker.Stop()
 
 	// 发送初始心跳
 	if err := s.sendHeartbeat(ctx, stream); err != nil {
@@ -116,6 +121,16 @@ func (s *Sender) Run(ctx context.Context, stream pb.ProbeSync_ConnectClient, ack
 			if s.dbClient != nil {
 				if err := s.syncDecisions(ctx, stream); err != nil {
 					s.logger.WithError(err).Warn("decisions sync failed")
+				}
+			}
+
+		case <-hostLogsTicker.C:
+			if s.hostlogReader != nil {
+				if err := s.syncHostProtectionLogs(ctx, stream); err != nil {
+					s.logger.WithError(err).Warn("host protection logs sync failed")
+				}
+				if err := s.syncHostActivityLogs(ctx, stream); err != nil {
+					s.logger.WithError(err).Warn("host activity logs sync failed")
 				}
 			}
 		}
@@ -160,6 +175,10 @@ func (s *Sender) sendHeartbeat(ctx context.Context, stream pb.ProbeSync_ConnectC
 	status := &pb.ProbeStatus{
 		Version:       s.probeVersion(),
 		UptimeSeconds: int64(time.Since(s.startTime).Seconds()),
+	}
+
+	if s.hostlogReader != nil {
+		status.PendingHostLogs = 1
 	}
 
 	msg := &pb.ProbeMessage{
@@ -404,6 +423,156 @@ func (s *Sender) syncDecisions(ctx context.Context, stream pb.ProbeSync_ConnectC
 	return nil
 }
 
+// syncHostProtectionLogs 同步 host_protection_logs 到后端
+func (s *Sender) syncHostProtectionLogs(ctx context.Context, stream pb.ProbeSync_ConnectClient) error {
+	cursorStr := s.state.GetCursor("host_protection_logs")
+	var cursor int64 = 0
+	if cursorStr != "" {
+		var err error
+		cursor, err = strconv.ParseInt(cursorStr, 10, 64)
+		if err != nil {
+			s.logger.WithError(err).Warn("invalid host_protection_logs cursor, resetting")
+			cursor = 0
+		}
+	}
+
+	result, err := s.hostlogReader.QueryProtectionLogs(ctx, cursor, s.cfg.Sync.BatchSize)
+	if err != nil {
+		return fmt.Errorf("failed to read host protection logs: %w", err)
+	}
+
+	if len(result.Items) == 0 {
+		return nil
+	}
+
+	items, usedCount, err := limitHostProtectionLogsByBytes(result.Items, s.maxBatchBytes())
+	if err != nil {
+		return fmt.Errorf("failed to build host protection logs batch: %w", err)
+	}
+	if len(items) == 0 || usedCount == 0 {
+		return nil
+	}
+
+	fromID := result.Items[0].ID
+	toID := result.Items[len(result.Items)-1].ID
+	if usedCount < len(result.Items) {
+		toID = result.Items[usedCount-1].ID
+	}
+
+	batchID := fmt.Sprintf("%s-host_protection_logs-%d-%d", s.cfg.ProbeID, fromID, toID)
+
+	msg := &pb.ProbeMessage{
+		ProbeId: s.cfg.ProbeID,
+		Payload: &pb.ProbeMessage_DataBatch{
+			DataBatch: &pb.DataBatch{
+				BatchId:    batchID,
+				CursorFrom: fromID,
+				CursorTo:   toID,
+				Timestamp:  time.Now().UTC().Format(time.RFC3339),
+				Payload: &pb.DataBatch_HostProtectionLogs{
+					HostProtectionLogs: &pb.HostProtectionLogBatch{
+						Items: items,
+					},
+				},
+			},
+		},
+	}
+
+	ackWaiter := s.registerAck(batchID)
+	if err := s.sendWithRetry(ctx, stream, msg); err != nil {
+		s.unregisterAck(batchID)
+		return fmt.Errorf("failed to send host logs batch: %w", err)
+	}
+
+	if err := s.waitAndCommitAck(ctx, batchID, ackWaiter, "host_protection_logs", toID); err != nil {
+		s.logger.WithError(err).Warn("host protection logs batch not acknowledged")
+	}
+
+	s.logger.WithFields(log.Fields{
+		"batch_id": batchID,
+		"count":    len(items),
+		"from":     fromID,
+		"to":       toID,
+	}).Info("host protection logs batch sent")
+
+	return nil
+}
+
+// syncHostActivityLogs 同步 host_activity_logs 到后端
+func (s *Sender) syncHostActivityLogs(ctx context.Context, stream pb.ProbeSync_ConnectClient) error {
+	cursorStr := s.state.GetCursor("host_activity_logs")
+	var cursor int64 = 0
+	if cursorStr != "" {
+		var err error
+		cursor, err = strconv.ParseInt(cursorStr, 10, 64)
+		if err != nil {
+			s.logger.WithError(err).Warn("invalid host_activity_logs cursor, resetting")
+			cursor = 0
+		}
+	}
+
+	result, err := s.hostlogReader.QueryActivityLogs(ctx, cursor, s.cfg.Sync.BatchSize)
+	if err != nil {
+		return fmt.Errorf("failed to read host activity logs: %w", err)
+	}
+
+	if len(result.Items) == 0 {
+		return nil
+	}
+
+	items, usedCount, err := limitHostActivityLogsByBytes(result.Items, s.maxBatchBytes())
+	if err != nil {
+		return fmt.Errorf("failed to build host activity logs batch: %w", err)
+	}
+	if len(items) == 0 || usedCount == 0 {
+		return nil
+	}
+
+	fromID := result.Items[0].ID
+	toID := result.Items[len(result.Items)-1].ID
+	if usedCount < len(result.Items) {
+		toID = result.Items[usedCount-1].ID
+	}
+
+	batchID := fmt.Sprintf("%s-host_activity_logs-%d-%d", s.cfg.ProbeID, fromID, toID)
+
+	msg := &pb.ProbeMessage{
+		ProbeId: s.cfg.ProbeID,
+		Payload: &pb.ProbeMessage_DataBatch{
+			DataBatch: &pb.DataBatch{
+				BatchId:    batchID,
+				CursorFrom: fromID,
+				CursorTo:   toID,
+				Timestamp:  time.Now().UTC().Format(time.RFC3339),
+				Payload: &pb.DataBatch_HostActivityLogs{
+					HostActivityLogs: &pb.HostActivityLogBatch{
+						Items: items,
+					},
+				},
+			},
+		},
+	}
+
+	ackWaiter := s.registerAck(batchID)
+	if err := s.sendWithRetry(ctx, stream, msg); err != nil {
+		s.unregisterAck(batchID)
+		return fmt.Errorf("failed to send host activity logs batch: %w", err)
+	}
+
+	if err := s.waitAndCommitAck(ctx, batchID, ackWaiter, "host_activity_logs", toID); err != nil {
+		s.logger.WithError(err).Warn("host activity logs batch not acknowledged")
+	}
+
+	s.logger.WithFields(log.Fields{
+		"batch_id": batchID,
+		"count":    len(items),
+		"from":     fromID,
+		"to":       toID,
+	}).Info("host activity logs batch sent")
+
+	return nil
+}
+
 func (s *Sender) waitAndCommitAck(ctx context.Context, batchID string, ackWaiter chan *pb.BatchAck, dataType string, cursor int64) error {
 	ack, err := s.waitForAck(ctx, batchID, ackWaiter)
 	if err != nil {
@@ -521,6 +690,10 @@ func (s *Sender) syncInterval(dataType string) time.Duration {
 	case "decisions":
 		if s.cfg.Sync.DecisionsIntervalDuration > 0 {
 			return s.cfg.Sync.DecisionsIntervalDuration
+		}
+	case "host_logs":
+		if s.cfg.Sync.HostLogsIntervalDuration > 0 {
+			return s.cfg.Sync.HostLogsIntervalDuration
 		}
 	}
 
@@ -811,4 +984,109 @@ func limitDecisionsByBytes(items []*database.PusherDecision, maxBytes int) ([]*p
 	}
 
 	return nil, fmt.Errorf("batch too large even with 1 item")
+}
+
+func limitHostProtectionLogsByBytes(items []hostlogstore.ProtectionLog, maxBytes int) ([]*pb.HostProtectionLog, int, error) {
+	if len(items) == 0 {
+		return nil, 0, nil
+	}
+
+	logs := make([]*pb.HostProtectionLog, 0, len(items))
+	for _, item := range items {
+		logEntry := &pb.HostProtectionLog{
+			Id:        item.ID,
+			Timestamp: item.Timestamp,
+			FilePath:  item.FilePath,
+			FileName:  item.FileName,
+			Action:    item.Action,
+			Success:   int32(item.Success),
+		}
+		if item.UnlockDuration.Valid {
+			logEntry.UnlockDuration = item.UnlockDuration.Int64
+		}
+		if item.ErrorMessage.Valid {
+			logEntry.ErrorMessage = item.ErrorMessage.String
+		}
+		if item.UploadedAt.Valid {
+			logEntry.UploadedAt = item.UploadedAt.String
+		}
+		logs = append(logs, logEntry)
+	}
+
+	if maxBytes <= 0 {
+		return logs, len(logs), nil
+	}
+
+	data, err := json.Marshal(logs)
+	if err != nil {
+		return nil, 0, err
+	}
+	if len(data) <= maxBytes {
+		return logs, len(logs), nil
+	}
+
+	for i := len(logs) - 1; i >= 1; i-- {
+		data, err = json.Marshal(logs[:i])
+		if err != nil {
+			return nil, 0, err
+		}
+		if len(data) <= maxBytes {
+			return logs[:i], i, nil
+		}
+	}
+
+	return nil, 0, fmt.Errorf("batch too large even with 1 item")
+}
+
+func limitHostActivityLogsByBytes(items []hostlogstore.ActivityLog, maxBytes int) ([]*pb.HostActivityLog, int, error) {
+	if len(items) == 0 {
+		return nil, 0, nil
+	}
+
+	logs := make([]*pb.HostActivityLog, 0, len(items))
+	for _, item := range items {
+		logEntry := &pb.HostActivityLog{
+			Id:         item.ID,
+			Timestamp:  item.Timestamp,
+			FilePath:   item.FilePath,
+			FileName:   item.FileName,
+			Operation:  item.Operation,
+			Validation: item.Validation,
+			IsFolder:   int32(item.IsFolder),
+		}
+		if item.User.Valid {
+			logEntry.User = item.User.String
+		}
+		if item.Process.Valid {
+			logEntry.Process = item.Process.String
+		}
+		if item.UploadedAt.Valid {
+			logEntry.UploadedAt = item.UploadedAt.String
+		}
+		logs = append(logs, logEntry)
+	}
+
+	if maxBytes <= 0 {
+		return logs, len(logs), nil
+	}
+
+	data, err := json.Marshal(logs)
+	if err != nil {
+		return nil, 0, err
+	}
+	if len(data) <= maxBytes {
+		return logs, len(logs), nil
+	}
+
+	for i := len(logs) - 1; i >= 1; i-- {
+		data, err = json.Marshal(logs[:i])
+		if err != nil {
+			return nil, 0, err
+		}
+		if len(data) <= maxBytes {
+			return logs[:i], i, nil
+		}
+	}
+
+	return nil, 0, fmt.Errorf("batch too large even with 1 item")
 }

@@ -32,6 +32,7 @@ crowdsec_service:
       access_logs_interval: "60s"   # Access logs 同步间隔
       alerts_interval: "30s"        # Alerts 同步间隔
       decisions_interval: "30s"     # Decisions 同步间隔
+      host_logs_interval: "30s"     # Host logs 同步间隔
       heartbeat_interval: "30s"     # 心跳间隔
       batch_size: 500               # 每批最大记录数
       max_batch_bytes: 1048576      # 每批最大字节数 (1MB)

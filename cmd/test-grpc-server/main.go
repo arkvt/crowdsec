@@ -148,6 +148,12 @@ func (s *testServer) handleDataBatch(probeID string, batch *pb.DataBatch, stream
 	case *pb.DataBatch_Decisions:
 		payloadType = "decisions"
 		payloadJSON, _ = protojson.Marshal(payload.Decisions)
+	case *pb.DataBatch_HostActivityLogs:
+		payloadType = "host_activity_logs"
+		payloadJSON, _ = protojson.Marshal(payload.HostActivityLogs)
+	case *pb.DataBatch_HostProtectionLogs:
+		payloadType = "host_protection_logs"
+		payloadJSON, _ = protojson.Marshal(payload.HostProtectionLogs)
 	default:
 		log.Printf("  Payload: <unknown>")
 	}
