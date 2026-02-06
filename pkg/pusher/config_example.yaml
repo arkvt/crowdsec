@@ -43,3 +43,6 @@ crowdsec_service:
     
     # 游标状态文件路径
     state_file: "./data/pusher-state.json"
+
+    # Host logs SQLite DB path
+    host_logs_db_path: "./runtime/host-layer/data/host_logs.db"

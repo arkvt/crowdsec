@@ -128,37 +128,52 @@ func (AckStatus) EnumDescriptor() ([]byte, []int) {
 type CommandType int32
 
 const (
-	CommandType_COMMAND_TYPE_UNSPECIFIED      CommandType = 0
-	CommandType_COMMAND_TYPE_PING             CommandType = 1
-	CommandType_COMMAND_TYPE_FORCE_SYNC       CommandType = 2
-	CommandType_COMMAND_TYPE_ADD_WHITELIST    CommandType = 3
-	CommandType_COMMAND_TYPE_REMOVE_WHITELIST CommandType = 4
-	CommandType_COMMAND_TYPE_ADD_DECISION     CommandType = 5
-	CommandType_COMMAND_TYPE_REMOVE_DECISION  CommandType = 6
-	CommandType_COMMAND_TYPE_UPDATE_CONFIG    CommandType = 7
+	CommandType_COMMAND_TYPE_UNSPECIFIED           CommandType = 0
+	CommandType_COMMAND_TYPE_PING                  CommandType = 1
+	CommandType_COMMAND_TYPE_FORCE_SYNC            CommandType = 2
+	CommandType_COMMAND_TYPE_ADD_WHITELIST         CommandType = 3
+	CommandType_COMMAND_TYPE_REMOVE_WHITELIST      CommandType = 4
+	CommandType_COMMAND_TYPE_ADD_DECISION          CommandType = 5
+	CommandType_COMMAND_TYPE_REMOVE_DECISION       CommandType = 6
+	CommandType_COMMAND_TYPE_UPDATE_CONFIG         CommandType = 7
+	CommandType_COMMAND_TYPE_HOST_LOCK_PATH        CommandType = 8
+	CommandType_COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH CommandType = 9
+	CommandType_COMMAND_TYPE_HOST_EMERGENCY_UNLOCK CommandType = 10
+	CommandType_COMMAND_TYPE_HOST_QUERY_STATUS     CommandType = 11
+	CommandType_COMMAND_TYPE_HOST_APPLY_POLICY     CommandType = 12
 )
 
 // Enum value maps for CommandType.
 var (
 	CommandType_name = map[int32]string{
-		0: "COMMAND_TYPE_UNSPECIFIED",
-		1: "COMMAND_TYPE_PING",
-		2: "COMMAND_TYPE_FORCE_SYNC",
-		3: "COMMAND_TYPE_ADD_WHITELIST",
-		4: "COMMAND_TYPE_REMOVE_WHITELIST",
-		5: "COMMAND_TYPE_ADD_DECISION",
-		6: "COMMAND_TYPE_REMOVE_DECISION",
-		7: "COMMAND_TYPE_UPDATE_CONFIG",
+		0:  "COMMAND_TYPE_UNSPECIFIED",
+		1:  "COMMAND_TYPE_PING",
+		2:  "COMMAND_TYPE_FORCE_SYNC",
+		3:  "COMMAND_TYPE_ADD_WHITELIST",
+		4:  "COMMAND_TYPE_REMOVE_WHITELIST",
+		5:  "COMMAND_TYPE_ADD_DECISION",
+		6:  "COMMAND_TYPE_REMOVE_DECISION",
+		7:  "COMMAND_TYPE_UPDATE_CONFIG",
+		8:  "COMMAND_TYPE_HOST_LOCK_PATH",
+		9:  "COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH",
+		10: "COMMAND_TYPE_HOST_EMERGENCY_UNLOCK",
+		11: "COMMAND_TYPE_HOST_QUERY_STATUS",
+		12: "COMMAND_TYPE_HOST_APPLY_POLICY",
 	}
 	CommandType_value = map[string]int32{
-		"COMMAND_TYPE_UNSPECIFIED":      0,
-		"COMMAND_TYPE_PING":             1,
-		"COMMAND_TYPE_FORCE_SYNC":       2,
-		"COMMAND_TYPE_ADD_WHITELIST":    3,
-		"COMMAND_TYPE_REMOVE_WHITELIST": 4,
-		"COMMAND_TYPE_ADD_DECISION":     5,
-		"COMMAND_TYPE_REMOVE_DECISION":  6,
-		"COMMAND_TYPE_UPDATE_CONFIG":    7,
+		"COMMAND_TYPE_UNSPECIFIED":           0,
+		"COMMAND_TYPE_PING":                  1,
+		"COMMAND_TYPE_FORCE_SYNC":            2,
+		"COMMAND_TYPE_ADD_WHITELIST":         3,
+		"COMMAND_TYPE_REMOVE_WHITELIST":      4,
+		"COMMAND_TYPE_ADD_DECISION":          5,
+		"COMMAND_TYPE_REMOVE_DECISION":       6,
+		"COMMAND_TYPE_UPDATE_CONFIG":         7,
+		"COMMAND_TYPE_HOST_LOCK_PATH":        8,
+		"COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH": 9,
+		"COMMAND_TYPE_HOST_EMERGENCY_UNLOCK": 10,
+		"COMMAND_TYPE_HOST_QUERY_STATUS":     11,
+		"COMMAND_TYPE_HOST_APPLY_POLICY":     12,
 	}
 )
 
@@ -2462,7 +2477,7 @@ const file_probe_sync_proto_rawDesc = "" +
 	"\x16ACK_STATUS_UNSPECIFIED\x10\x00\x12\x11\n" +
 	"\rACK_STATUS_OK\x10\x01\x12\x18\n" +
 	"\x14ACK_STATUS_DUPLICATE\x10\x02\x12\x14\n" +
-	"\x10ACK_STATUS_ERROR\x10\x03*\x83\x02\n" +
+	"\x10ACK_STATUS_ERROR\x10\x03*\xbc\x03\n" +
 	"\vCommandType\x12\x1c\n" +
 	"\x18COMMAND_TYPE_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11COMMAND_TYPE_PING\x10\x01\x12\x1b\n" +
@@ -2471,7 +2486,13 @@ const file_probe_sync_proto_rawDesc = "" +
 	"\x1dCOMMAND_TYPE_REMOVE_WHITELIST\x10\x04\x12\x1d\n" +
 	"\x19COMMAND_TYPE_ADD_DECISION\x10\x05\x12 \n" +
 	"\x1cCOMMAND_TYPE_REMOVE_DECISION\x10\x06\x12\x1e\n" +
-	"\x1aCOMMAND_TYPE_UPDATE_CONFIG\x10\a2N\n" +
+	"\x1aCOMMAND_TYPE_UPDATE_CONFIG\x10\a\x12\x1f\n" +
+	"\x1bCOMMAND_TYPE_HOST_LOCK_PATH\x10\b\x12&\n" +
+	"\"COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH\x10\t\x12&\n" +
+	"\"COMMAND_TYPE_HOST_EMERGENCY_UNLOCK\x10\n" +
+	"\x12\"\n" +
+	"\x1eCOMMAND_TYPE_HOST_QUERY_STATUS\x10\v\x12\"\n" +
+	"\x1eCOMMAND_TYPE_HOST_APPLY_POLICY\x10\f2N\n" +
 	"\tProbeSync\x12A\n" +
 	"\aConnect\x12\x17.probesync.ProbeMessage\x1a\x19.probesync.BackendMessage(\x010\x01B4Z2github.com/crowdsecurity/crowdsec/pkg/probesync/pbb\x06proto3"
 

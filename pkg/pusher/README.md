@@ -107,6 +107,9 @@ crowdsec_service:
       heartbeat_interval: "30s"
       batch_size: 500
       max_batch_bytes: 1048576
+
+    # Host logs SQLite DB path
+    host_logs_db_path: "./runtime/host-layer/data/host_logs.db"
     
     # 重连
     reconnect_interval: "5s"

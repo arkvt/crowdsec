@@ -66,13 +66,22 @@ func NewPusher(cfg *csconfig.PusherCfg, rawlogReader *rawlogstore.Reader, hostlo
 		return nil, fmt.Errorf("failed to load state: %w", err)
 	}
 
+	hostStore := (*hostlogstore.CommandStore)(nil)
+	if cfg.HostLogsDBPath != "" {
+		hostStore, err = hostlogstore.NewCommandStore(cfg.HostLogsDBPath)
+		if err != nil {
+			logger.WithError(err).Warn("failed to create host command store")
+			hostStore = nil
+		}
+	}
+
 	p := &Pusher{
 		cfg:           cfg,
 		state:         state,
 		rawlogReader:  rawlogReader,
 		hostlogReader: hostlogReader,
 		dbClient:      dbClient,
-		executor:      NewExecutor(dbClient, logger, lapiCfg),
+		executor:      NewExecutor(dbClient, hostStore, logger, lapiCfg),
 		logger:        logger,
 		ackCh:         make(chan *pb.BatchAck, 100),
 		stopCh:        make(chan struct{}),

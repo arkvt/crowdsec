@@ -204,6 +204,16 @@ func commandTypeToString(t pb.CommandType) string {
 		return "remove_decision"
 	case pb.CommandType_COMMAND_TYPE_UPDATE_CONFIG:
 		return "update_config"
+	case pb.CommandType_COMMAND_TYPE_HOST_LOCK_PATH:
+		return "host_lock_path"
+	case pb.CommandType_COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH:
+		return "host_temp_unlock_path"
+	case pb.CommandType_COMMAND_TYPE_HOST_EMERGENCY_UNLOCK:
+		return "host_emergency_unlock"
+	case pb.CommandType_COMMAND_TYPE_HOST_QUERY_STATUS:
+		return "host_query_status"
+	case pb.CommandType_COMMAND_TYPE_HOST_APPLY_POLICY:
+		return "host_apply_policy"
 	default:
 		return "unknown"
 	}

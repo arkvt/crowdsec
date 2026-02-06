@@ -188,9 +188,9 @@ func runCrowdsec(
 
 		var hostlogReader *hostlogstore.Reader
 		if cConfig.Crowdsec.Pusher.Sync != nil && cConfig.Crowdsec.Pusher.Sync.HostLogsInterval != "" {
-			hostLogPath := os.Getenv("SCARECROW_HOST_LOG_DB")
+			hostLogPath := cConfig.Crowdsec.Pusher.HostLogsDBPath
 			if hostLogPath == "" {
-				log.Debug("SCARECROW_HOST_LOG_DB not set, host log sync disabled")
+				log.Debug("pusher.host_logs_db_path not set, host log sync disabled")
 			} else {
 				hostlogReader, err = hostlogstore.NewReader(hostLogPath, log.WithField("service", "hostlogstore-reader"))
 				if err != nil {

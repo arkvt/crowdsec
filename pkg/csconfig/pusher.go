@@ -30,6 +30,9 @@ type PusherCfg struct {
 	// State file for cursor persistence
 	StateFile string `yaml:"state_file,omitempty"`
 
+	// Host logs SQLite path (optional)
+	HostLogsDBPath string `yaml:"host_logs_db_path,omitempty"`
+
 	// Parsed durations (internal)
 	ReconnectIntervalDuration    time.Duration `yaml:"-"`
 	MaxReconnectIntervalDuration time.Duration `yaml:"-"`
@@ -118,6 +121,8 @@ func (c *Config) LoadPusher() error {
 	if err := ensureAbsolutePath(&p.StateFile); err != nil {
 		return err
 	}
+
+	// NOTE: keep host_logs_db_path as-is to preserve relative paths
 
 	// Load TLS config
 	if err := loadPusherTLS(p); err != nil {

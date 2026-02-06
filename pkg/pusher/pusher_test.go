@@ -108,7 +108,7 @@ func TestStateAtomicWrite(t *testing.T) {
 
 func TestExecutorPing(t *testing.T) {
 	logger := log.WithField("test", "executor")
-	executor := NewExecutor(nil, logger, nil)
+	executor := NewExecutor(nil, nil, logger, nil)
 
 	ctx := context.Background()
 	result, err := executor.Execute(ctx, "ping", nil)
@@ -132,7 +132,7 @@ func TestExecutorPing(t *testing.T) {
 
 func TestExecutorForceSync(t *testing.T) {
 	logger := log.WithField("test", "executor")
-	executor := NewExecutor(nil, logger, nil)
+	executor := NewExecutor(nil, nil, logger, nil)
 
 	ctx := context.Background()
 	result, err := executor.Execute(ctx, "force_sync", nil)
@@ -152,7 +152,7 @@ func TestExecutorForceSync(t *testing.T) {
 
 func TestExecutorAddWhitelist(t *testing.T) {
 	logger := log.WithField("test", "executor")
-	executor := NewExecutor(nil, logger, nil)
+	executor := NewExecutor(nil, nil, logger, nil)
 
 	ctx := context.Background()
 	params := json.RawMessage(`{"ip": "192.168.1.100", "reason": "trusted host"}`)
@@ -165,7 +165,7 @@ func TestExecutorAddWhitelist(t *testing.T) {
 
 func TestExecutorUnknownCommand(t *testing.T) {
 	logger := log.WithField("test", "executor")
-	executor := NewExecutor(nil, logger, nil)
+	executor := NewExecutor(nil, nil, logger, nil)
 
 	ctx := context.Background()
 	_, err := executor.Execute(ctx, "unknown_command", nil)
@@ -186,6 +186,11 @@ func TestCommandTypeToString(t *testing.T) {
 		{pb.CommandType_COMMAND_TYPE_ADD_DECISION, "add_decision"},
 		{pb.CommandType_COMMAND_TYPE_REMOVE_DECISION, "remove_decision"},
 		{pb.CommandType_COMMAND_TYPE_UPDATE_CONFIG, "update_config"},
+		{pb.CommandType_COMMAND_TYPE_HOST_LOCK_PATH, "host_lock_path"},
+		{pb.CommandType_COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH, "host_temp_unlock_path"},
+		{pb.CommandType_COMMAND_TYPE_HOST_EMERGENCY_UNLOCK, "host_emergency_unlock"},
+		{pb.CommandType_COMMAND_TYPE_HOST_QUERY_STATUS, "host_query_status"},
+		{pb.CommandType_COMMAND_TYPE_HOST_APPLY_POLICY, "host_apply_policy"},
 		{pb.CommandType_COMMAND_TYPE_UNSPECIFIED, "unknown"},
 	}
 

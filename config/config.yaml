@@ -19,6 +19,9 @@ crowdsec_service:
   acquisition_path: /etc/crowdsec/acquis.yaml
   acquisition_dir: /etc/crowdsec/acquis.d
   parser_routines: 1
+  pusher:
+    enabled: false
+    host_logs_db_path: "./runtime/host-layer/data/host_logs.db"
 cscli:
   output: human
   color: auto

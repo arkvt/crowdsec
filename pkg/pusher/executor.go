@@ -13,23 +13,26 @@ import (
 	"github.com/crowdsecurity/crowdsec/pkg/apiclient"
 	"github.com/crowdsecurity/crowdsec/pkg/csconfig"
 	"github.com/crowdsecurity/crowdsec/pkg/database"
+	"github.com/crowdsecurity/crowdsec/pkg/hostlogstore"
 	"github.com/crowdsecurity/crowdsec/pkg/models"
 	"github.com/crowdsecurity/crowdsec/pkg/types"
 )
 
 // Executor 负责指令执行
 type Executor struct {
-	dbClient *database.Client
-	logger   *log.Entry
-	lapiCfg  *csconfig.LocalApiClientCfg
+	dbClient  *database.Client
+	hostStore *hostlogstore.CommandStore
+	logger    *log.Entry
+	lapiCfg   *csconfig.LocalApiClientCfg
 }
 
 // NewExecutor 创建指令执行器
-func NewExecutor(dbClient *database.Client, logger *log.Entry, lapiCfg *csconfig.LocalApiClientCfg) *Executor {
+func NewExecutor(dbClient *database.Client, hostStore *hostlogstore.CommandStore, logger *log.Entry, lapiCfg *csconfig.LocalApiClientCfg) *Executor {
 	return &Executor{
-		dbClient: dbClient,
-		logger:   logger,
-		lapiCfg:  lapiCfg,
+		dbClient:  dbClient,
+		hostStore: hostStore,
+		logger:    logger,
+		lapiCfg:   lapiCfg,
 	}
 }
 
@@ -50,9 +53,51 @@ func (e *Executor) Execute(ctx context.Context, cmdType string, params json.RawM
 		return e.executeForceSync(ctx)
 	case "update_config":
 		return e.executeUpdateConfig(ctx, params)
+	case "host_lock_path":
+		return e.executeHostCommand(ctx, "host_lock_path", params)
+	case "host_temp_unlock_path":
+		return e.executeHostCommand(ctx, "host_temp_unlock_path", params)
+	case "host_emergency_unlock":
+		return e.executeHostCommand(ctx, "host_emergency_unlock", params)
+	case "host_query_status":
+		return e.executeHostCommand(ctx, "host_query_status", params)
+	case "host_apply_policy":
+		return e.executeHostCommand(ctx, "host_apply_policy", params)
 	default:
 		return nil, fmt.Errorf("unknown command type: %s", cmdType)
 	}
+}
+
+func (e *Executor) executeHostCommand(ctx context.Context, cmdType string, params json.RawMessage) (interface{}, error) {
+	if e.hostStore == nil {
+		return nil, fmt.Errorf("host command store not configured")
+	}
+	cmdID := fmt.Sprintf("host-%d", time.Now().UnixNano())
+	command := hostlogstore.Command{
+		ID:        cmdID,
+		Type:      cmdType,
+		Params:    params,
+		CreatedAt: time.Now().UTC(),
+		ExpiresAt: time.Now().UTC().Add(2 * time.Minute),
+	}
+	if err := e.hostStore.Enqueue(ctx, command); err != nil {
+		return nil, err
+	}
+
+	ack, err := e.hostStore.WaitAck(ctx, cmdID, 30*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	if ack.Status != "success" {
+		return nil, fmt.Errorf("host command failed: %s", ack.Error)
+	}
+	if len(ack.Result) > 0 {
+		var out interface{}
+		if err := json.Unmarshal(ack.Result, &out); err == nil {
+			return out, nil
+		}
+	}
+	return map[string]interface{}{"status": "ok"}, nil
 }
 
 // WhitelistParams 为白名单指令参数
