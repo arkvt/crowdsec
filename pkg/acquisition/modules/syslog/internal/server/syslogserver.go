@@ -92,7 +92,8 @@ func (s *SyslogServer) Serve(ctx context.Context, msgChan chan SyslogMessage) er
 			return fmt.Errorf("reading from socket: %w", err)
 		}
 
-		msg := SyslogMessage{Message: buf[:n], Client: strings.Split(addr.String(), ":")[0]}
+		payload := append([]byte(nil), buf[:n]...)
+		msg := SyslogMessage{Message: payload, Client: clientHostFromAddr(addr)}
 
 		select {
 		case msgChan <- msg:
@@ -119,7 +120,7 @@ func (s *SyslogServer) serveTCP(ctx context.Context, msgChan chan SyslogMessage)
 func (s *SyslogServer) handleConn(ctx context.Context, conn net.Conn, msgChan chan SyslogMessage) {
 	defer conn.Close()
 
-	client := strings.Split(conn.RemoteAddr().String(), ":")[0]
+	client := clientHostFromAddr(conn.RemoteAddr())
 	reader := bufio.NewScanner(conn)
 	buf := make([]byte, s.MaxMessageLen)
 	reader.Buffer(buf, s.MaxMessageLen)
@@ -154,4 +155,17 @@ func (s *SyslogServer) KillServer() error {
 	}
 
 	return nil
+}
+
+func clientHostFromAddr(addr net.Addr) string {
+	if addr == nil {
+		return ""
+	}
+
+	host, _, err := net.SplitHostPort(addr.String())
+	if err != nil {
+		return addr.String()
+	}
+
+	return host
 }

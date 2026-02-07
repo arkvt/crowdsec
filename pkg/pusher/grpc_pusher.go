@@ -94,9 +94,9 @@ func NewPusher(cfg *csconfig.PusherCfg, rawlogReader *rawlogstore.Reader, hostlo
 func (p *Pusher) Run(ctx context.Context) error {
 	p.logger.Info("starting gRPC pusher")
 
-	// 连接后端
+	// 连接后端（失败也继续，让连接管理器负责重连）
 	if err := p.connect(ctx); err != nil {
-		return fmt.Errorf("initial connection failed: %w", err)
+		p.logger.WithError(err).Warn("initial connection failed, will retry")
 	}
 
 	// 启动连接管理器
@@ -276,6 +276,7 @@ func (p *Pusher) connectionManager(ctx context.Context) {
 		// 启动 sender/receiver 协程
 		streamCtx, streamCancel := context.WithCancel(ctx)
 		errCh := make(chan error, 2)
+		sendQueue := NewSendQueue(streamCtx, stream, p.logger)
 
 		// Sender
 		p.wg.Add(1)
@@ -286,8 +287,8 @@ func (p *Pusher) connectionManager(ctx context.Context) {
 					p.logger.WithField("panic", r).Error("sender panic")
 				}
 			}()
-			sender := NewSender(p.cfg, p.state, p.rawlogReader, p.hostlogReader, p.dbClient, p.logger)
-			if err := sender.Run(streamCtx, stream, p.ackCh); err != nil {
+			sender := NewSender(p.cfg, p.state, p.rawlogReader, p.hostlogReader, p.dbClient, sendQueue, p.logger)
+			if err := sender.Run(streamCtx, p.ackCh); err != nil {
 				errCh <- fmt.Errorf("sender error: %w", err)
 			}
 		}()
@@ -301,7 +302,7 @@ func (p *Pusher) connectionManager(ctx context.Context) {
 					p.logger.WithField("panic", r).Error("receiver panic")
 				}
 			}()
-			receiver := NewReceiver(p.cfg, p.executor, p.logger)
+			receiver := NewReceiver(p.cfg, p.executor, sendQueue, p.logger)
 			if err := receiver.Run(streamCtx, stream, p.ackCh); err != nil {
 				errCh <- fmt.Errorf("receiver error: %w", err)
 			}

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -15,39 +14,29 @@ import (
 )
 
 const (
-	defaultCommandTimeout  = 20 * time.Second
-	envCommandTimeout      = "SCARECROW_PUSHER_COMMAND_TIMEOUT"
-	defaultCommandDedupTTl = 10 * time.Minute
-	envCommandDedupTTL     = "SCARECROW_PUSHER_COMMAND_DEDUP_TTL"
+	defaultCommandTimeout = 35 * time.Second
+	envCommandTimeout     = "SCARECROW_PUSHER_COMMAND_TIMEOUT"
 )
-
-type commandCacheEntry struct {
-	status    pb.CommandStatus
-	result    string
-	errMsg    string
-	expiresAt time.Time
-}
 
 // Receiver 负责从后端 gRPC 流接收消息
 type Receiver struct {
-	cfg         *csconfig.PusherCfg
-	executor    *Executor
-	logger      *log.Entry
-	cmdTimeout  time.Duration
-	cmdDedupTTL time.Duration
-	cmdCache    map[string]commandCacheEntry
-	cmdMu       sync.Mutex
+	cfg        *csconfig.PusherCfg
+	executor   *Executor
+	sender     MessageSender
+	logger     *log.Entry
+	cmdTimeout time.Duration
+	cmdSem     chan struct{}
 }
 
 // NewReceiver 创建 Receiver
-func NewReceiver(cfg *csconfig.PusherCfg, executor *Executor, logger *log.Entry) *Receiver {
+func NewReceiver(cfg *csconfig.PusherCfg, executor *Executor, sender MessageSender, logger *log.Entry) *Receiver {
 	return &Receiver{
-		cfg:         cfg,
-		executor:    executor,
-		logger:      logger.WithField("module", "receiver"),
-		cmdTimeout:  envDuration(envCommandTimeout, defaultCommandTimeout),
-		cmdDedupTTL: envDuration(envCommandDedupTTL, defaultCommandDedupTTl),
-		cmdCache:    make(map[string]commandCacheEntry),
+		cfg:        cfg,
+		executor:   executor,
+		sender:     sender,
+		logger:     logger.WithField("module", "receiver"),
+		cmdTimeout: envDuration(envCommandTimeout, defaultCommandTimeout),
+		cmdSem:     make(chan struct{}, 4),
 	}
 }
 
@@ -72,12 +61,12 @@ func (r *Receiver) Run(ctx context.Context, stream pb.ProbeSync_ConnectClient, a
 			return fmt.Errorf("recv error: %w", err)
 		}
 
-		r.handleMessage(ctx, stream, msg, ackCh)
+		r.handleMessage(ctx, msg, ackCh)
 	}
 }
 
 // handleMessage 处理后端消息
-func (r *Receiver) handleMessage(ctx context.Context, stream pb.ProbeSync_ConnectClient, msg *pb.BackendMessage, ackCh chan<- *pb.BatchAck) {
+func (r *Receiver) handleMessage(ctx context.Context, msg *pb.BackendMessage, ackCh chan<- *pb.BatchAck) {
 	switch payload := msg.Payload.(type) {
 	case *pb.BackendMessage_HeartbeatAck:
 		r.handleHeartbeatAck(payload.HeartbeatAck)
@@ -86,7 +75,7 @@ func (r *Receiver) handleMessage(ctx context.Context, stream pb.ProbeSync_Connec
 		r.handleBatchAck(payload.BatchAck, ackCh)
 
 	case *pb.BackendMessage_Command:
-		r.handleCommand(ctx, stream, payload.Command)
+		r.handleCommand(ctx, payload.Command)
 
 	case *pb.BackendMessage_ConfigUpdate:
 		r.handleConfigUpdate(payload.ConfigUpdate)
@@ -125,54 +114,52 @@ func (r *Receiver) handleBatchAck(ack *pb.BatchAck, ackCh chan<- *pb.BatchAck) {
 }
 
 // handleCommand 执行命令并返回结果
-func (r *Receiver) handleCommand(ctx context.Context, stream pb.ProbeSync_ConnectClient, cmd *pb.Command) {
+func (r *Receiver) handleCommand(ctx context.Context, cmd *pb.Command) {
 	logger := r.logger.WithFields(log.Fields{
 		"command_id":   cmd.Id,
 		"command_type": cmd.Type.String(),
 	})
 
 	logger.Info("command received")
-	logger.Info("command details: ", cmd)
+	logger.WithFields(log.Fields{
+		"params_size": len(cmd.Params),
+		"created_at":  cmd.CreatedAt,
+		"expires_at":  cmd.ExpiresAt,
+	}).Info("command metadata")
 	if r.executor == nil {
 		logger.Warn("executor not available")
-		r.sendCommandAck(stream, cmd.Id, pb.CommandStatus_COMMAND_STATUS_FAILED, nil, "executor not available")
+		if err := r.sendCommandAck(ctx, cmd.Id, pb.CommandStatus_COMMAND_STATUS_FAILED, nil, "executor not available"); err != nil {
+			logger.WithError(err).Warn("failed to send command ack")
+		}
 		return
 	}
 
-	if cmd.Id != "" {
-		if cached, ok := r.getCachedCommand(cmd.Id); ok {
-			logger.WithField("status", cached.status.String()).Info("command duplicate, using cached result")
-			if err := r.sendCachedCommandAck(stream, cmd.Id, cached); err != nil {
-				logger.WithError(err).Warn("failed to send cached command ack")
+	go func() {
+		r.cmdSem <- struct{}{}
+		defer func() {
+			<-r.cmdSem
+		}()
+
+		// 将 CommandType 转为字符串
+		cmdType := commandTypeToString(cmd.Type)
+
+		cmdCtx, cancel := context.WithTimeout(ctx, r.cmdTimeout)
+		defer cancel()
+
+		result, err := r.executor.Execute(cmdCtx, cmdType, json.RawMessage(cmd.Params))
+		if err != nil {
+			logger.WithError(err).Warn("command execution failed")
+			if sendErr := r.sendCommandAck(ctx, cmd.Id, pb.CommandStatus_COMMAND_STATUS_FAILED, nil, err.Error()); sendErr != nil {
+				logger.WithError(sendErr).Warn("failed to send command ack")
 			}
 			return
 		}
-	}
 
-	// 将 CommandType 转为字符串
-	cmdType := commandTypeToString(cmd.Type)
-
-	cmdCtx, cancel := context.WithTimeout(ctx, r.cmdTimeout)
-	defer cancel()
-
-	result, err := r.executor.Execute(cmdCtx, cmdType, json.RawMessage(cmd.Params))
-	if err != nil {
-		logger.WithError(err).Warn("command execution failed")
-		r.sendCommandAck(stream, cmd.Id, pb.CommandStatus_COMMAND_STATUS_FAILED, nil, err.Error())
-		return
-	}
-
-	logger.Info("command executed successfully")
-	if cmd.Id != "" {
-		if cached, cacheErr := r.cacheCommandResult(result); cacheErr != nil {
-			logger.WithError(cacheErr).Warn("failed to cache command result")
-		} else {
-			r.setCachedCommand(cmd.Id, cached)
+		logger.Info("command executed successfully")
+		if sendErr := r.sendCommandAck(ctx, cmd.Id, pb.CommandStatus_COMMAND_STATUS_SUCCESS, result, ""); sendErr != nil {
+			logger.WithError(sendErr).Warn("failed to send command ack")
 		}
-	}
-	if err := r.sendCommandAck(stream, cmd.Id, pb.CommandStatus_COMMAND_STATUS_SUCCESS, result, ""); err != nil {
-		logger.WithError(err).Warn("failed to send command ack")
-	}
+	}()
 }
 
 // handleConfigUpdate 处理配置更新
@@ -220,7 +207,10 @@ func commandTypeToString(t pb.CommandType) string {
 	}
 }
 
-func (r *Receiver) sendCommandAck(stream pb.ProbeSync_ConnectClient, commandID string, status pb.CommandStatus, result interface{}, errMsg string) error {
+func (r *Receiver) sendCommandAck(ctx context.Context, commandID string, status pb.CommandStatus, result interface{}, errMsg string) error {
+	if r.sender == nil {
+		return fmt.Errorf("message sender not configured")
+	}
 	ack := &pb.CommandAck{
 		CommandId: commandID,
 		Status:    status,
@@ -244,68 +234,5 @@ func (r *Receiver) sendCommandAck(stream pb.ProbeSync_ConnectClient, commandID s
 		},
 	}
 
-	return stream.Send(msg)
-}
-
-func (r *Receiver) getCachedCommand(commandID string) (commandCacheEntry, bool) {
-	r.cmdMu.Lock()
-	defer r.cmdMu.Unlock()
-
-	entry, ok := r.cmdCache[commandID]
-	if !ok {
-		return commandCacheEntry{}, false
-	}
-	if time.Now().After(entry.expiresAt) {
-		delete(r.cmdCache, commandID)
-		return commandCacheEntry{}, false
-	}
-
-	return entry, true
-}
-
-func (r *Receiver) setCachedCommand(commandID string, entry commandCacheEntry) {
-	r.cmdMu.Lock()
-	defer r.cmdMu.Unlock()
-
-	if time.Now().After(entry.expiresAt) {
-		return
-	}
-	r.cmdCache[commandID] = entry
-}
-
-func (r *Receiver) cacheCommandResult(result interface{}) (commandCacheEntry, error) {
-	entry := commandCacheEntry{
-		status:    pb.CommandStatus_COMMAND_STATUS_SUCCESS,
-		expiresAt: time.Now().Add(r.cmdDedupTTL),
-	}
-
-	if result == nil {
-		return entry, nil
-	}
-
-	resultJSON, err := json.Marshal(result)
-	if err != nil {
-		return commandCacheEntry{}, fmt.Errorf("marshal result failed: %w", err)
-	}
-
-	entry.result = string(resultJSON)
-	return entry, nil
-}
-
-func (r *Receiver) sendCachedCommandAck(stream pb.ProbeSync_ConnectClient, commandID string, cached commandCacheEntry) error {
-	ack := &pb.CommandAck{
-		CommandId: commandID,
-		Status:    cached.status,
-		Error:     cached.errMsg,
-		Result:    cached.result,
-	}
-
-	msg := &pb.ProbeMessage{
-		ProbeId: r.cfg.ProbeID,
-		Payload: &pb.ProbeMessage_CommandAck{
-			CommandAck: ack,
-		},
-	}
-
-	return stream.Send(msg)
+	return r.sender.Send(ctx, msg)
 }

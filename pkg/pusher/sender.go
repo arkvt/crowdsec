@@ -38,6 +38,7 @@ type Sender struct {
 	rawlogReader  *rawlogstore.Reader
 	hostlogReader *hostlogstore.Reader
 	dbClient      *database.Client
+	sender        MessageSender
 	logger        *log.Entry
 	startTime     time.Time
 	ackTimeout    time.Duration
@@ -50,13 +51,14 @@ type Sender struct {
 }
 
 // NewSender 创建 Sender
-func NewSender(cfg *csconfig.PusherCfg, state *State, rawlogReader *rawlogstore.Reader, hostlogReader *hostlogstore.Reader, dbClient *database.Client, logger *log.Entry) *Sender {
+func NewSender(cfg *csconfig.PusherCfg, state *State, rawlogReader *rawlogstore.Reader, hostlogReader *hostlogstore.Reader, dbClient *database.Client, sender MessageSender, logger *log.Entry) *Sender {
 	return &Sender{
 		cfg:           cfg,
 		state:         state,
 		rawlogReader:  rawlogReader,
 		hostlogReader: hostlogReader,
 		dbClient:      dbClient,
+		sender:        sender,
 		logger:        logger.WithField("module", "sender"),
 		pendingAcks:   make(map[string]chan *pb.BatchAck),
 		startTime:     time.Now(),
@@ -67,7 +69,7 @@ func NewSender(cfg *csconfig.PusherCfg, state *State, rawlogReader *rawlogstore.
 }
 
 // Run 启动发送循环
-func (s *Sender) Run(ctx context.Context, stream pb.ProbeSync_ConnectClient, ackCh <-chan *pb.BatchAck) error {
+func (s *Sender) Run(ctx context.Context, ackCh <-chan *pb.BatchAck) error {
 	s.logger.Info("sender started")
 	defer s.logger.Info("sender stopped")
 
@@ -89,7 +91,7 @@ func (s *Sender) Run(ctx context.Context, stream pb.ProbeSync_ConnectClient, ack
 	defer hostLogsTicker.Stop()
 
 	// 发送初始心跳
-	if err := s.sendHeartbeat(ctx, stream); err != nil {
+	if err := s.sendHeartbeat(ctx); err != nil {
 		return fmt.Errorf("initial heartbeat failed: %w", err)
 	}
 
@@ -99,37 +101,37 @@ func (s *Sender) Run(ctx context.Context, stream pb.ProbeSync_ConnectClient, ack
 			return ctx.Err()
 
 		case <-heartbeatTicker.C:
-			if err := s.sendHeartbeat(ctx, stream); err != nil {
+			if err := s.sendHeartbeat(ctx); err != nil {
 				return fmt.Errorf("heartbeat failed: %w", err)
 			}
 
 		case <-accessLogsTicker.C:
 			if s.rawlogReader != nil {
-				if err := s.syncAccessLogs(ctx, stream); err != nil {
+				if err := s.syncAccessLogs(ctx); err != nil {
 					s.logger.WithError(err).Warn("access logs sync failed")
 				}
 			}
 
 		case <-alertsTicker.C:
 			if s.dbClient != nil {
-				if err := s.syncAlerts(ctx, stream); err != nil {
+				if err := s.syncAlerts(ctx); err != nil {
 					s.logger.WithError(err).Warn("alerts sync failed")
 				}
 			}
 
 		case <-decisionsTicker.C:
 			if s.dbClient != nil {
-				if err := s.syncDecisions(ctx, stream); err != nil {
+				if err := s.syncDecisions(ctx); err != nil {
 					s.logger.WithError(err).Warn("decisions sync failed")
 				}
 			}
 
 		case <-hostLogsTicker.C:
 			if s.hostlogReader != nil {
-				if err := s.syncHostProtectionLogs(ctx, stream); err != nil {
+				if err := s.syncHostProtectionLogs(ctx); err != nil {
 					s.logger.WithError(err).Warn("host protection logs sync failed")
 				}
-				if err := s.syncHostActivityLogs(ctx, stream); err != nil {
+				if err := s.syncHostActivityLogs(ctx); err != nil {
 					s.logger.WithError(err).Warn("host activity logs sync failed")
 				}
 			}
@@ -171,7 +173,7 @@ func (s *Sender) dispatchAck(ack *pb.BatchAck) {
 }
 
 // sendHeartbeat 发送心跳消息
-func (s *Sender) sendHeartbeat(ctx context.Context, stream pb.ProbeSync_ConnectClient) error {
+func (s *Sender) sendHeartbeat(ctx context.Context) error {
 	status := &pb.ProbeStatus{
 		Version:       s.probeVersion(),
 		UptimeSeconds: int64(time.Since(s.startTime).Seconds()),
@@ -191,7 +193,7 @@ func (s *Sender) sendHeartbeat(ctx context.Context, stream pb.ProbeSync_ConnectC
 		},
 	}
 
-	if err := s.sendWithRetry(ctx, stream, msg); err != nil {
+	if err := s.sendWithRetry(ctx, msg); err != nil {
 		return fmt.Errorf("failed to send heartbeat: %w", err)
 	}
 
@@ -200,7 +202,7 @@ func (s *Sender) sendHeartbeat(ctx context.Context, stream pb.ProbeSync_ConnectC
 }
 
 // syncAccessLogs 同步 access_logs 到后端
-func (s *Sender) syncAccessLogs(ctx context.Context, stream pb.ProbeSync_ConnectClient) error {
+func (s *Sender) syncAccessLogs(ctx context.Context) error {
 	cursorStr := s.state.GetCursor("access_logs")
 	var cursor int64 = 0
 	if cursorStr != "" {
@@ -222,21 +224,30 @@ func (s *Sender) syncAccessLogs(ctx context.Context, stream pb.ProbeSync_Connect
 		return nil
 	}
 
-	fromID := result.Items[0].ID
-	toID := result.Items[len(result.Items)-1].ID
-
-	items, usedCount, err := limitCaddyLogsByBytes(result.Items, s.maxBatchBytes())
+	items, firstValidPos, processedCount, skippedCount, err := limitCaddyLogsByBytes(result.Items, s.maxBatchBytes(), s.logger)
 	if err != nil {
 		return fmt.Errorf("failed to build access logs batch: %w", err)
 	}
-	if len(items) == 0 || usedCount == 0 {
+	if processedCount == 0 {
 		return nil
 	}
 
-	// 若被裁剪，更新范围
-	if usedCount < len(result.Items) {
-		toID = result.Items[usedCount-1].ID
+	toID := result.Items[processedCount-1].ID
+
+	if len(items) == 0 || firstValidPos < 0 {
+		if skippedCount > 0 {
+			if err := s.state.UpdateAndSave("access_logs", strconv.FormatInt(toID, 10)); err != nil {
+				s.logger.WithError(err).Warn("failed to advance cursor after dropping malformed access logs")
+			}
+			s.logger.WithFields(log.Fields{
+				"skipped": skippedCount,
+				"to":      toID,
+			}).Warn("dropped malformed access logs and advanced cursor")
+		}
+		return nil
 	}
+
+	fromID := result.Items[firstValidPos].ID
 
 	// 生成 batch ID
 	batchID := fmt.Sprintf("%s-caddy_logs-%d-%d", s.cfg.ProbeID, fromID, toID)
@@ -260,7 +271,7 @@ func (s *Sender) syncAccessLogs(ctx context.Context, stream pb.ProbeSync_Connect
 	}
 
 	ackWaiter := s.registerAck(batchID)
-	if err := s.sendWithRetry(ctx, stream, msg); err != nil {
+	if err := s.sendWithRetry(ctx, msg); err != nil {
 		s.unregisterAck(batchID)
 		return fmt.Errorf("failed to send access logs batch: %w", err)
 	}
@@ -272,6 +283,7 @@ func (s *Sender) syncAccessLogs(ctx context.Context, stream pb.ProbeSync_Connect
 	s.logger.WithFields(log.Fields{
 		"batch_id": batchID,
 		"count":    len(items),
+		"skipped":  skippedCount,
 		"from":     fromID,
 		"to":       toID,
 	}).Info("access logs batch sent")
@@ -280,7 +292,7 @@ func (s *Sender) syncAccessLogs(ctx context.Context, stream pb.ProbeSync_Connect
 }
 
 // syncAlerts 同步 alerts 到后端
-func (s *Sender) syncAlerts(ctx context.Context, stream pb.ProbeSync_ConnectClient) error {
+func (s *Sender) syncAlerts(ctx context.Context) error {
 	cursorStr := s.state.GetCursor("alerts")
 	var cursor int64 = 0
 	if cursorStr != "" {
@@ -334,7 +346,7 @@ func (s *Sender) syncAlerts(ctx context.Context, stream pb.ProbeSync_ConnectClie
 	}
 
 	ackWaiter := s.registerAck(batchID)
-	if err := s.sendWithRetry(ctx, stream, msg); err != nil {
+	if err := s.sendWithRetry(ctx, msg); err != nil {
 		s.unregisterAck(batchID)
 		return fmt.Errorf("failed to send alerts batch: %w", err)
 	}
@@ -352,7 +364,7 @@ func (s *Sender) syncAlerts(ctx context.Context, stream pb.ProbeSync_ConnectClie
 }
 
 // syncDecisions 同步 decisions 到后端
-func (s *Sender) syncDecisions(ctx context.Context, stream pb.ProbeSync_ConnectClient) error {
+func (s *Sender) syncDecisions(ctx context.Context) error {
 	cursorStr := s.state.GetCursor("decisions")
 	var cursor int64 = 0
 	if cursorStr != "" {
@@ -406,7 +418,7 @@ func (s *Sender) syncDecisions(ctx context.Context, stream pb.ProbeSync_ConnectC
 	}
 
 	ackWaiter := s.registerAck(batchID)
-	if err := s.sendWithRetry(ctx, stream, msg); err != nil {
+	if err := s.sendWithRetry(ctx, msg); err != nil {
 		s.unregisterAck(batchID)
 		return fmt.Errorf("failed to send decisions batch: %w", err)
 	}
@@ -424,7 +436,7 @@ func (s *Sender) syncDecisions(ctx context.Context, stream pb.ProbeSync_ConnectC
 }
 
 // syncHostProtectionLogs 同步 host_protection_logs 到后端
-func (s *Sender) syncHostProtectionLogs(ctx context.Context, stream pb.ProbeSync_ConnectClient) error {
+func (s *Sender) syncHostProtectionLogs(ctx context.Context) error {
 	cursorStr := s.state.GetCursor("host_protection_logs")
 	var cursor int64 = 0
 	if cursorStr != "" {
@@ -479,7 +491,7 @@ func (s *Sender) syncHostProtectionLogs(ctx context.Context, stream pb.ProbeSync
 	}
 
 	ackWaiter := s.registerAck(batchID)
-	if err := s.sendWithRetry(ctx, stream, msg); err != nil {
+	if err := s.sendWithRetry(ctx, msg); err != nil {
 		s.unregisterAck(batchID)
 		return fmt.Errorf("failed to send host logs batch: %w", err)
 	}
@@ -499,7 +511,7 @@ func (s *Sender) syncHostProtectionLogs(ctx context.Context, stream pb.ProbeSync
 }
 
 // syncHostActivityLogs 同步 host_activity_logs 到后端
-func (s *Sender) syncHostActivityLogs(ctx context.Context, stream pb.ProbeSync_ConnectClient) error {
+func (s *Sender) syncHostActivityLogs(ctx context.Context) error {
 	cursorStr := s.state.GetCursor("host_activity_logs")
 	var cursor int64 = 0
 	if cursorStr != "" {
@@ -554,7 +566,7 @@ func (s *Sender) syncHostActivityLogs(ctx context.Context, stream pb.ProbeSync_C
 	}
 
 	ackWaiter := s.registerAck(batchID)
-	if err := s.sendWithRetry(ctx, stream, msg); err != nil {
+	if err := s.sendWithRetry(ctx, msg); err != nil {
 		s.unregisterAck(batchID)
 		return fmt.Errorf("failed to send host activity logs batch: %w", err)
 	}
@@ -620,7 +632,10 @@ func (s *Sender) unregisterAck(batchID string) {
 	s.pendingMu.Unlock()
 }
 
-func (s *Sender) sendWithRetry(ctx context.Context, stream pb.ProbeSync_ConnectClient, msg *pb.ProbeMessage) error {
+func (s *Sender) sendWithRetry(ctx context.Context, msg *pb.ProbeMessage) error {
+	if s.sender == nil {
+		return fmt.Errorf("message sender not configured")
+	}
 	var lastErr error
 	retries := s.sendRetries
 	if retries < 0 {
@@ -628,7 +643,7 @@ func (s *Sender) sendWithRetry(ctx context.Context, stream pb.ProbeSync_ConnectC
 	}
 
 	for attempt := 0; attempt <= retries; attempt++ {
-		if err := stream.Send(msg); err == nil {
+		if err := s.sender.Send(ctx, msg); err == nil {
 			return nil
 		} else {
 			lastErr = err
@@ -795,16 +810,28 @@ func toStringListMap(input map[string][]string) map[string]*pb.StringList {
 	return output
 }
 
-func limitCaddyLogsByBytes(items []rawlogstore.AccessLog, maxBytes int) ([]*pb.CaddyLog, int, error) {
+func limitCaddyLogsByBytes(items []rawlogstore.AccessLog, maxBytes int, logger *log.Entry) ([]*pb.CaddyLog, int, int, int, error) {
 	if len(items) == 0 {
-		return nil, 0, nil
+		return nil, -1, 0, 0, nil
 	}
 
 	logs := make([]*pb.CaddyLog, 0, len(items))
-	for _, item := range items {
+	firstValidPos := -1
+	processedCount := 0
+	skippedCount := 0
+
+	for idx, item := range items {
 		var rawLog caddyLogRaw
 		if err := json.Unmarshal([]byte(item.Raw), &rawLog); err != nil {
-			return nil, 0, fmt.Errorf("parse caddy log id=%d: %w", item.ID, err)
+			processedCount = idx + 1
+			skippedCount++
+			if logger != nil {
+				logger.WithFields(log.Fields{
+					"log_id": item.ID,
+					"error":  err,
+				}).Warn("dropping malformed caddy access log")
+			}
+			continue
 		}
 
 		var request *pb.CaddyRequest
@@ -843,32 +870,37 @@ func limitCaddyLogsByBytes(items []rawlogstore.AccessLog, maxBytes int) ([]*pb.C
 			Status:      rawLog.Status,
 			RespHeaders: toStringListMap(rawLog.RespHeaders),
 		}
-		logs = append(logs, logEntry)
-	}
 
-	if maxBytes <= 0 {
-		return logs, len(logs), nil
-	}
-
-	data, err := json.Marshal(logs)
-	if err != nil {
-		return nil, 0, err
-	}
-	if len(data) <= maxBytes {
-		return logs, len(logs), nil
-	}
-
-	for i := len(logs) - 1; i >= 1; i-- {
-		data, err = json.Marshal(logs[:i])
-		if err != nil {
-			return nil, 0, err
+		candidate := append(logs, logEntry)
+		if maxBytes > 0 {
+			data, err := json.Marshal(candidate)
+			if err != nil {
+				return nil, -1, processedCount, skippedCount, err
+			}
+			if len(data) > maxBytes {
+				if len(logs) == 0 {
+					processedCount = idx + 1
+					skippedCount++
+					if logger != nil {
+						logger.WithFields(log.Fields{
+							"log_id":    item.ID,
+							"max_bytes": maxBytes,
+						}).Warn("dropping oversized caddy access log")
+					}
+					continue
+				}
+				break
+			}
 		}
-		if len(data) <= maxBytes {
-			return logs[:i], i, nil
+
+		if firstValidPos == -1 {
+			firstValidPos = idx
 		}
+		logs = candidate
+		processedCount = idx + 1
 	}
 
-	return nil, 0, fmt.Errorf("batch too large even with 1 item")
+	return logs, firstValidPos, processedCount, skippedCount, nil
 }
 
 func limitAlertsByBytes(items []*database.PusherAlert, maxBytes int) ([]*pb.Alert, error) {

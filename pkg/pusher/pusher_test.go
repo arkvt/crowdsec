@@ -130,23 +130,26 @@ func TestExecutorPing(t *testing.T) {
 	}
 }
 
-func TestExecutorForceSync(t *testing.T) {
+func TestExecutorForceSyncNotImplemented(t *testing.T) {
 	logger := log.WithField("test", "executor")
 	executor := NewExecutor(nil, nil, logger, nil)
 
 	ctx := context.Background()
-	result, err := executor.Execute(ctx, "force_sync", nil)
-	if err != nil {
-		t.Fatalf("force_sync failed: %v", err)
+	_, err := executor.Execute(ctx, "force_sync", nil)
+	if err == nil {
+		t.Fatalf("expected not implemented error")
 	}
+}
 
-	resultMap, ok := result.(map[string]interface{})
-	if !ok {
-		t.Fatalf("expected map result, got %T", result)
-	}
+func TestExecutorUpdateConfigNotImplemented(t *testing.T) {
+	logger := log.WithField("test", "executor")
+	executor := NewExecutor(nil, nil, logger, nil)
 
-	if ack, ok := resultMap["acknowledged"].(bool); !ok || !ack {
-		t.Errorf("expected acknowledged=true, got %v", resultMap["acknowledged"])
+	ctx := context.Background()
+	params := json.RawMessage(`{"version":"v1","config":"Zm9v"}`)
+	_, err := executor.Execute(ctx, "update_config", params)
+	if err == nil {
+		t.Fatalf("expected not implemented error")
 	}
 }
 

@@ -501,13 +501,9 @@ func (e *Executor) executePing(ctx context.Context) (interface{}, error) {
 }
 
 func (e *Executor) executeForceSync(ctx context.Context) (interface{}, error) {
-	// 该指令应触发立即同步
-	// 目前仅返回确认，实际实现需通知 pusher 触发同步
-	e.logger.Info("force sync requested")
-	return map[string]interface{}{
-		"acknowledged": true,
-		"note":         "sync will be triggered on next cycle",
-	}, nil
+	_ = ctx
+	e.logger.Warn("force sync requested but not implemented")
+	return nil, fmt.Errorf("force_sync is not implemented")
 }
 
 // ConfigUpdateParams 为配置更新指令参数
@@ -517,6 +513,8 @@ type ConfigUpdateParams struct {
 }
 
 func (e *Executor) executeUpdateConfig(ctx context.Context, params json.RawMessage) (interface{}, error) {
+	_ = ctx
+
 	var p ConfigUpdateParams
 	if err := json.Unmarshal(params, &p); err != nil {
 		return nil, fmt.Errorf("invalid config update params: %w", err)
@@ -525,16 +523,7 @@ func (e *Executor) executeUpdateConfig(ctx context.Context, params json.RawMessa
 	e.logger.WithFields(log.Fields{
 		"version": p.Version,
 		"size":    len(p.Config),
-	}).Info("config update requested")
+	}).Warn("config update requested but not implemented")
 
-	// TODO: 实现真实配置更新逻辑
-	// 1. 校验新配置
-	// 2. 写入配置文件
-	// 3. 触发 reload
-
-	return map[string]interface{}{
-		"acknowledged": true,
-		"version":      p.Version,
-		"note":         "config update requires manual implementation",
-	}, nil
+	return nil, fmt.Errorf("update_config is not implemented")
 }
