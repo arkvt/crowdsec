@@ -177,6 +177,7 @@ message HostProtectionLog {
   int64 unlock_duration = 7;
   string error_message = 8;
   string uploaded_at = 9;
+  string request_id = 10;
 }
 
 // Decision 决策结构
