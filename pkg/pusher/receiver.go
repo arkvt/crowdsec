@@ -101,7 +101,7 @@ func (r *Receiver) handleHeartbeatAck(ack *pb.HeartbeatAck) {
 	r.logger.WithFields(log.Fields{
 		"server_time":             ack.ServerTime,
 		"config_update_available": ack.ConfigUpdateAvailable,
-	}).Debug("heartbeat ack received")
+	}).Info("heartbeat ack received")
 
 	if ack.ConfigUpdateAvailable {
 		r.logger.Info("configuration update available")
@@ -114,7 +114,7 @@ func (r *Receiver) handleBatchAck(ack *pb.BatchAck, ackCh chan<- *pb.BatchAck) {
 	r.logger.WithFields(log.Fields{
 		"batch_id": ack.BatchId,
 		"status":   ack.Status.String(),
-	}).Debug("batch ack received")
+	}).Info("batch ack received")
 
 	// 转发给 sender 更新游标
 	select {
@@ -132,6 +132,7 @@ func (r *Receiver) handleCommand(ctx context.Context, stream pb.ProbeSync_Connec
 	})
 
 	logger.Info("command received")
+	logger.Info("command details: ", cmd)
 	if r.executor == nil {
 		logger.Warn("executor not available")
 		r.sendCommandAck(stream, cmd.Id, pb.CommandStatus_COMMAND_STATUS_FAILED, nil, "executor not available")
