@@ -30,7 +30,7 @@ func TestReceiverCommandFailureAck(t *testing.T) {
 
 	cmd := &pb.Command{
 		Id:     "cmd-1",
-		Type:   pb.CommandType_COMMAND_TYPE_REMOVE_DECISION,
+		Type:   pb.COMMAND_TYPE_REMOVE_DECISION,
 		Params: []byte(`{}`),
 	}
 	msg := &pb.BackendMessage{

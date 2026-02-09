@@ -128,19 +128,19 @@ func (AckStatus) EnumDescriptor() ([]byte, []int) {
 type CommandType int32
 
 const (
-	CommandType_COMMAND_TYPE_UNSPECIFIED           CommandType = 0
-	CommandType_COMMAND_TYPE_PING                  CommandType = 1
-	CommandType_COMMAND_TYPE_FORCE_SYNC            CommandType = 2
-	CommandType_COMMAND_TYPE_ADD_WHITELIST         CommandType = 3
-	CommandType_COMMAND_TYPE_REMOVE_WHITELIST      CommandType = 4
-	CommandType_COMMAND_TYPE_ADD_DECISION          CommandType = 5
-	CommandType_COMMAND_TYPE_REMOVE_DECISION       CommandType = 6
-	CommandType_COMMAND_TYPE_UPDATE_CONFIG         CommandType = 7
-	CommandType_COMMAND_TYPE_HOST_LOCK_PATH        CommandType = 8
-	CommandType_COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH CommandType = 9
-	CommandType_COMMAND_TYPE_HOST_EMERGENCY_UNLOCK CommandType = 10
-	CommandType_COMMAND_TYPE_HOST_QUERY_STATUS     CommandType = 11
-	CommandType_COMMAND_TYPE_HOST_APPLY_POLICY     CommandType = 12
+	COMMAND_TYPE_UNSPECIFIED           CommandType = 0
+	COMMAND_TYPE_PING                  CommandType = 1
+	COMMAND_TYPE_FORCE_SYNC            CommandType = 2
+	COMMAND_TYPE_ADD_WHITELIST         CommandType = 3
+	COMMAND_TYPE_REMOVE_WHITELIST      CommandType = 4
+	COMMAND_TYPE_ADD_DECISION          CommandType = 5
+	COMMAND_TYPE_REMOVE_DECISION       CommandType = 6
+	COMMAND_TYPE_UPDATE_CONFIG         CommandType = 7
+	COMMAND_TYPE_HOST_LOCK_PATH        CommandType = 8
+	COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH CommandType = 9
+	COMMAND_TYPE_HOST_EMERGENCY_UNLOCK CommandType = 10
+	COMMAND_TYPE_HOST_QUERY_STATUS     CommandType = 11
+	COMMAND_TYPE_HOST_APPLY_POLICY     CommandType = 12
 )
 
 // Enum value maps for CommandType.
@@ -2196,7 +2196,7 @@ func (x *Command) GetType() CommandType {
 	if x != nil {
 		return x.Type
 	}
-	return CommandType_COMMAND_TYPE_UNSPECIFIED
+	return COMMAND_TYPE_UNSPECIFIED
 }
 
 func (x *Command) GetParams() []byte {

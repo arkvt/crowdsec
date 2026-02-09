@@ -182,19 +182,19 @@ func TestCommandTypeToString(t *testing.T) {
 		cmdType  pb.CommandType
 		expected string
 	}{
-		{pb.CommandType_COMMAND_TYPE_PING, "ping"},
-		{pb.CommandType_COMMAND_TYPE_FORCE_SYNC, "force_sync"},
-		{pb.CommandType_COMMAND_TYPE_ADD_WHITELIST, "add_whitelist"},
-		{pb.CommandType_COMMAND_TYPE_REMOVE_WHITELIST, "remove_whitelist"},
-		{pb.CommandType_COMMAND_TYPE_ADD_DECISION, "add_decision"},
-		{pb.CommandType_COMMAND_TYPE_REMOVE_DECISION, "remove_decision"},
-		{pb.CommandType_COMMAND_TYPE_UPDATE_CONFIG, "update_config"},
-		{pb.CommandType_COMMAND_TYPE_HOST_LOCK_PATH, "host_lock_path"},
-		{pb.CommandType_COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH, "host_temp_unlock_path"},
-		{pb.CommandType_COMMAND_TYPE_HOST_EMERGENCY_UNLOCK, "host_emergency_unlock"},
-		{pb.CommandType_COMMAND_TYPE_HOST_QUERY_STATUS, "host_query_status"},
-		{pb.CommandType_COMMAND_TYPE_HOST_APPLY_POLICY, "host_apply_policy"},
-		{pb.CommandType_COMMAND_TYPE_UNSPECIFIED, "unknown"},
+		{pb.COMMAND_TYPE_PING, "ping"},
+		{pb.COMMAND_TYPE_FORCE_SYNC, "force_sync"},
+		{pb.COMMAND_TYPE_ADD_WHITELIST, "add_whitelist"},
+		{pb.COMMAND_TYPE_REMOVE_WHITELIST, "remove_whitelist"},
+		{pb.COMMAND_TYPE_ADD_DECISION, "add_decision"},
+		{pb.COMMAND_TYPE_REMOVE_DECISION, "remove_decision"},
+		{pb.COMMAND_TYPE_UPDATE_CONFIG, "update_config"},
+		{pb.COMMAND_TYPE_HOST_LOCK_PATH, "host_lock_path"},
+		{pb.COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH, "host_temp_unlock_path"},
+		{pb.COMMAND_TYPE_HOST_EMERGENCY_UNLOCK, "host_emergency_unlock"},
+		{pb.COMMAND_TYPE_HOST_QUERY_STATUS, "host_query_status"},
+		{pb.COMMAND_TYPE_HOST_APPLY_POLICY, "host_apply_policy"},
+		{pb.COMMAND_TYPE_UNSPECIFIED, "unknown"},
 	}
 
 	for _, tc := range testCases {
@@ -334,7 +334,7 @@ func TestBackendMessage(t *testing.T) {
 		Payload: &pb.BackendMessage_Command{
 			Command: &pb.Command{
 				Id:        "cmd-123",
-				Type:      pb.CommandType_COMMAND_TYPE_ADD_WHITELIST,
+				Type:      pb.COMMAND_TYPE_ADD_WHITELIST,
 				Params:    []byte(`{"ip":"192.168.1.100"}`),
 				CreatedAt: time.Now().UTC().Format(time.RFC3339),
 			},
@@ -346,7 +346,7 @@ func TestBackendMessage(t *testing.T) {
 		t.Fatal("expected command payload")
 	}
 
-	if cmd.Type != pb.CommandType_COMMAND_TYPE_ADD_WHITELIST {
+	if cmd.Type != pb.COMMAND_TYPE_ADD_WHITELIST {
 		t.Errorf("unexpected command type: %v", cmd.Type)
 	}
 }

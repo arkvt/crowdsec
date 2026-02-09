@@ -120,7 +120,12 @@ func (s *testServer) handleHeartbeat(probeID string, hb *pb.Heartbeat, stream pb
 	}
 
 	// 首次心跳后发送测试指令
-	if s.sendCommands && !s.commandsSent && hb.Status != nil && hb.Status.UptimeSeconds > 0 {
+	if s.sendCommands && !s.commandsSent {
+		if hb.Status == nil {
+			log.Println("⚠️ send-commands 已开启，但 Heartbeat.Status 为空，仍尝试发送测试指令")
+		} else if hb.Status.UptimeSeconds <= 0 {
+			log.Printf("⚠️ send-commands 已开启，但 UptimeSeconds=%d，仍尝试发送测试指令", hb.Status.UptimeSeconds)
+		}
 		s.commandsSent = true
 		s.stream = stream
 		go s.sendTestCommands(probeID)
@@ -222,28 +227,48 @@ func (s *testServer) sendTestCommands(probeID string) {
 	}{
 		{
 			name:    "PING",
-			cmdType: pb.CommandType_COMMAND_TYPE_PING,
+			cmdType: pb.COMMAND_TYPE_PING,
 			params:  "{}",
 		},
 		{
 			name:    "ADD_DECISION (ban IP 192.0.2.100)",
-			cmdType: pb.CommandType_COMMAND_TYPE_ADD_DECISION,
+			cmdType: pb.COMMAND_TYPE_ADD_DECISION,
 			params:  `{"value":"192.0.2.100","scope":"ip","type":"ban","duration":"4h","reason":"test ban from gRPC server"}`,
 		},
 		{
 			name:    "ADD_WHITELIST (whitelist IP 203.0.113.50)",
-			cmdType: pb.CommandType_COMMAND_TYPE_ADD_WHITELIST,
+			cmdType: pb.COMMAND_TYPE_ADD_WHITELIST,
 			params:  `{"ip":"203.0.113.50","duration":"24h","reason":"test whitelist from gRPC server"}`,
 		},
 		{
 			name:    "REMOVE_DECISION (unban 192.0.2.100)",
-			cmdType: pb.CommandType_COMMAND_TYPE_REMOVE_DECISION,
+			cmdType: pb.COMMAND_TYPE_REMOVE_DECISION,
 			params:  `{"value":"192.0.2.100","scope":"ip"}`,
 		},
 		{
 			name:    "REMOVE_WHITELIST (remove 203.0.113.50)",
-			cmdType: pb.CommandType_COMMAND_TYPE_REMOVE_WHITELIST,
+			cmdType: pb.COMMAND_TYPE_REMOVE_WHITELIST,
 			params:  `{"ip":"203.0.113.50"}`,
+		},
+		{
+			name:    "HOST_LOCK_PATH (lock C:\\read\\test.txt)",
+			cmdType: pb.COMMAND_TYPE_HOST_LOCK_PATH,
+			params:  `{"path":"C:\\read\\test.txt"}`,
+		},
+		{
+			name:    "HOST_QUERY_STATUS (C:\\read\\test.txt)",
+			cmdType: pb.COMMAND_TYPE_HOST_QUERY_STATUS,
+			params:  `{"path":"C:\\read\\test.txt"}`,
+		},
+		{
+			name:    "HOST_TEMP_UNLOCK_PATH (30s for C:\\read\\test.txt)",
+			cmdType: pb.COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH,
+			params:  `{"path":"C:\\read\\test.txt","duration_seconds":30}`,
+		},
+		{
+			name:    "HOST_APPLY_POLICY (re-apply locks)",
+			cmdType: pb.COMMAND_TYPE_HOST_APPLY_POLICY,
+			params:  `{}`,
 		},
 	}
 

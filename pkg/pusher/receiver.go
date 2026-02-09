@@ -178,29 +178,29 @@ func (r *Receiver) handleConfigUpdate(update *pb.ConfigUpdate) {
 // commandTypeToString 将 proto 枚举转为字符串
 func commandTypeToString(t pb.CommandType) string {
 	switch t {
-	case pb.CommandType_COMMAND_TYPE_PING:
+	case pb.COMMAND_TYPE_PING:
 		return "ping"
-	case pb.CommandType_COMMAND_TYPE_FORCE_SYNC:
+	case pb.COMMAND_TYPE_FORCE_SYNC:
 		return "force_sync"
-	case pb.CommandType_COMMAND_TYPE_ADD_WHITELIST:
+	case pb.COMMAND_TYPE_ADD_WHITELIST:
 		return "add_whitelist"
-	case pb.CommandType_COMMAND_TYPE_REMOVE_WHITELIST:
+	case pb.COMMAND_TYPE_REMOVE_WHITELIST:
 		return "remove_whitelist"
-	case pb.CommandType_COMMAND_TYPE_ADD_DECISION:
+	case pb.COMMAND_TYPE_ADD_DECISION:
 		return "add_decision"
-	case pb.CommandType_COMMAND_TYPE_REMOVE_DECISION:
+	case pb.COMMAND_TYPE_REMOVE_DECISION:
 		return "remove_decision"
-	case pb.CommandType_COMMAND_TYPE_UPDATE_CONFIG:
+	case pb.COMMAND_TYPE_UPDATE_CONFIG:
 		return "update_config"
-	case pb.CommandType_COMMAND_TYPE_HOST_LOCK_PATH:
+	case pb.COMMAND_TYPE_HOST_LOCK_PATH:
 		return "host_lock_path"
-	case pb.CommandType_COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH:
+	case pb.COMMAND_TYPE_HOST_TEMP_UNLOCK_PATH:
 		return "host_temp_unlock_path"
-	case pb.CommandType_COMMAND_TYPE_HOST_EMERGENCY_UNLOCK:
+	case pb.COMMAND_TYPE_HOST_EMERGENCY_UNLOCK:
 		return "host_emergency_unlock"
-	case pb.CommandType_COMMAND_TYPE_HOST_QUERY_STATUS:
+	case pb.COMMAND_TYPE_HOST_QUERY_STATUS:
 		return "host_query_status"
-	case pb.CommandType_COMMAND_TYPE_HOST_APPLY_POLICY:
+	case pb.COMMAND_TYPE_HOST_APPLY_POLICY:
 		return "host_apply_policy"
 	default:
 		return "unknown"
