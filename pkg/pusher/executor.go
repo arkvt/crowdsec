@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -195,6 +196,14 @@ func normalizeDuration(raw string) (string, error) {
 	return raw, nil
 }
 
+func isInvalidScopeFilter(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "invalid filter") && strings.Contains(msg, "scope")
+}
+
 func (e *Executor) retryLAPIOperation(ctx context.Context, opName string, fn func(context.Context) (*apiclient.Response, error)) error {
 	maxRetries := envIntWithDefault(envLAPIRetryMax, defaultLAPIRetryMax)
 	baseDelay := envDuration(envLAPIRetryBase, defaultLAPIRetryBase)
@@ -365,17 +374,32 @@ func (e *Executor) executeRemoveWhitelist(ctx context.Context, params json.RawMe
 	}
 
 	var resp *models.DeleteDecisionResponse
-	if err := e.retryLAPIOperation(ctx, "remove whitelist decision", func(reqCtx context.Context) (*apiclient.Response, error) {
-		var err error
-		var apiResp *apiclient.Response
-		resp, apiResp, err = client.Decisions.Delete(reqCtx, apiclient.DecisionsDeleteOpts{
-			ScopeEquals: scope,
-			ValueEquals: value,
-			TypeEquals:  "whitelist",
+	remove := func(opts apiclient.DecisionsDeleteOpts) error {
+		return e.retryLAPIOperation(ctx, "remove whitelist decision", func(reqCtx context.Context) (*apiclient.Response, error) {
+			var err error
+			var apiResp *apiclient.Response
+			resp, apiResp, err = client.Decisions.Delete(reqCtx, opts)
+			return apiResp, err
 		})
-		return apiResp, err
-	}); err != nil {
-		return nil, err
+	}
+
+	opts := apiclient.DecisionsDeleteOpts{
+		ScopeEquals: scope,
+		ValueEquals: value,
+		TypeEquals:  "whitelist",
+	}
+	if err := remove(opts); err != nil {
+		if !isInvalidScopeFilter(err) {
+			return nil, err
+		}
+		e.logger.WithFields(log.Fields{
+			"value": value,
+			"scope": scope,
+		}).Warn("lapi does not support scope filter for whitelist delete, retrying without scope")
+		opts.ScopeEquals = ""
+		if err := remove(opts); err != nil {
+			return nil, err
+		}
 	}
 
 	e.logger.WithFields(log.Fields{
@@ -472,13 +496,28 @@ func (e *Executor) executeRemoveDecision(ctx context.Context, params json.RawMes
 	}
 
 	var resp *models.DeleteDecisionResponse
-	if err := e.retryLAPIOperation(ctx, "remove decision", func(reqCtx context.Context) (*apiclient.Response, error) {
-		var err error
-		var apiResp *apiclient.Response
-		resp, apiResp, err = client.Decisions.Delete(reqCtx, opts)
-		return apiResp, err
-	}); err != nil {
-		return nil, err
+	remove := func(current apiclient.DecisionsDeleteOpts) error {
+		return e.retryLAPIOperation(ctx, "remove decision", func(reqCtx context.Context) (*apiclient.Response, error) {
+			var err error
+			var apiResp *apiclient.Response
+			resp, apiResp, err = client.Decisions.Delete(reqCtx, current)
+			return apiResp, err
+		})
+	}
+
+	if err := remove(opts); err != nil {
+		if !isInvalidScopeFilter(err) || opts.ScopeEquals == "" {
+			return nil, err
+		}
+		e.logger.WithFields(log.Fields{
+			"value": p.Value,
+			"scope": opts.ScopeEquals,
+			"type":  opts.TypeEquals,
+		}).Warn("lapi does not support scope filter for decision delete, retrying without scope")
+		opts.ScopeEquals = ""
+		if err := remove(opts); err != nil {
+			return nil, err
+		}
 	}
 
 	e.logger.WithFields(log.Fields{

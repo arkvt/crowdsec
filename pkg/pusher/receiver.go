@@ -26,17 +26,31 @@ type Receiver struct {
 	logger     *log.Entry
 	cmdTimeout time.Duration
 	cmdSem     chan struct{}
+	ackQueue   *CommandAckQueue
 }
 
 // NewReceiver 创建 Receiver
 func NewReceiver(cfg *csconfig.PusherCfg, executor *Executor, sender MessageSender, logger *log.Entry) *Receiver {
+	receiverLogger := logger.WithField("module", "receiver")
+
+	var ackQueue *CommandAckQueue
+	if cfg != nil {
+		queue, err := NewCommandAckQueue(cfg.ProbeID, cfg.StateFile, sender, receiverLogger)
+		if err != nil {
+			receiverLogger.WithError(err).Warn("failed to initialize command ack queue")
+		} else {
+			ackQueue = queue
+		}
+	}
+
 	return &Receiver{
 		cfg:        cfg,
 		executor:   executor,
 		sender:     sender,
-		logger:     logger.WithField("module", "receiver"),
+		logger:     receiverLogger,
 		cmdTimeout: envDuration(envCommandTimeout, defaultCommandTimeout),
 		cmdSem:     make(chan struct{}, 4),
+		ackQueue:   ackQueue,
 	}
 }
 
@@ -44,6 +58,10 @@ func NewReceiver(cfg *csconfig.PusherCfg, executor *Executor, sender MessageSend
 func (r *Receiver) Run(ctx context.Context, stream pb.ProbeSync_ConnectClient, ackCh chan<- *pb.BatchAck) error {
 	r.logger.Info("receiver started")
 	defer r.logger.Info("receiver stopped")
+
+	if r.ackQueue != nil {
+		go r.ackQueue.Run(ctx)
+	}
 
 	for {
 		select {
@@ -211,6 +229,11 @@ func (r *Receiver) sendCommandAck(ctx context.Context, commandID string, status 
 	if r.sender == nil {
 		return fmt.Errorf("message sender not configured")
 	}
+	probeID := ""
+	if r.cfg != nil {
+		probeID = r.cfg.ProbeID
+	}
+
 	ack := &pb.CommandAck{
 		CommandId: commandID,
 		Status:    status,
@@ -228,11 +251,25 @@ func (r *Receiver) sendCommandAck(ctx context.Context, commandID string, status 
 	}
 
 	msg := &pb.ProbeMessage{
-		ProbeId: r.cfg.ProbeID,
+		ProbeId: probeID,
 		Payload: &pb.ProbeMessage_CommandAck{
 			CommandAck: ack,
 		},
 	}
 
-	return r.sender.Send(ctx, msg)
+	if err := r.sender.Send(ctx, msg); err != nil {
+		if r.ackQueue == nil {
+			return err
+		}
+		if queueErr := r.ackQueue.Enqueue(ack); queueErr != nil {
+			return fmt.Errorf("send command ack failed: %w; queue command ack failed: %v", err, queueErr)
+		}
+		r.logger.WithFields(log.Fields{
+			"command_id": commandID,
+			"status":     ack.Status.String(),
+		}).WithError(err).Warn("command ack send failed, persisted for retry")
+		return nil
+	}
+
+	return nil
 }
